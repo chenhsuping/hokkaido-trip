@@ -39,3 +39,27 @@ export function findDateAnomalies(dates, tripStartIso) {
     .filter(d => d && compareDates(d, start) < 0)
     .map(d => ({ iso: d.iso, reason: `早於行程起始日 ${tripStartIso}` }));
 }
+
+/**
+ * 行程跨年時，依月份判斷該月屬於起始年或結束年。
+ * 例：行程 2026-12-25～2027-01-03，月份 12 屬於 2026，月份 1 屬於 2027。
+ */
+export function inferYear(month, tripStartIso, tripEndIso) {
+  const start = parseDate(tripStartIso);
+  const end = parseDate(tripEndIso);
+  if (start.y === end.y) return start.y;
+  return month >= start.m ? start.y : end.y;
+}
+
+/** 完整日期相差天數（b − a），可為負值。 */
+export function diffDays(aIso, bIso) {
+  const a = parseDate(aIso);
+  const b = parseDate(bIso);
+  const ms = Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d);
+  return Math.round(ms / 86400000);
+}
+
+/** 頭尾都算入的天數。 */
+export function daysBetweenInclusive(startIso, endIso) {
+  return diffDays(startIso, endIso) + 1;
+}

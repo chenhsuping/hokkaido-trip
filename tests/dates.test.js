@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseDate, compareDates, monthDay, matchByDate, findDateAnomalies } from '../src/dates.js';
+import { parseDate, compareDates, monthDay, matchByDate, findDateAnomalies, inferYear, diffDays, daysBetweenInclusive } from '../src/dates.js';
 
 describe('parseDate', () => {
   it('解析 ISO 日期', () => {
@@ -66,5 +66,43 @@ describe('findDateAnomalies', () => {
   it('行程內的日期不算異常', () => {
     const dates = ['2026-12-25', '2027-01-01'].map(parseDate);
     expect(findDateAnomalies(dates, '2026-12-25')).toEqual([]);
+  });
+});
+
+describe('inferYear', () => {
+  it('月份接近行程起始月時用起始年', () => {
+    expect(inferYear(12, '2026-12-25', '2027-01-03')).toBe(2026);
+  });
+
+  it('月份接近行程結束月時用結束年', () => {
+    expect(inferYear(1, '2026-12-25', '2027-01-03')).toBe(2027);
+  });
+
+  it('行程未跨年時兩者同年', () => {
+    expect(inferYear(7, '2026-07-01', '2026-07-10')).toBe(2026);
+  });
+});
+
+describe('diffDays', () => {
+  it('計算相差天數', () => {
+    expect(diffDays('2026-12-28', '2026-12-31')).toBe(3);
+  });
+
+  it('跨年也正確', () => {
+    expect(diffDays('2026-12-31', '2027-01-02')).toBe(2);
+  });
+
+  it('同一天為 0', () => {
+    expect(diffDays('2026-12-25', '2026-12-25')).toBe(0);
+  });
+});
+
+describe('daysBetweenInclusive', () => {
+  it('頭尾都算入', () => {
+    expect(daysBetweenInclusive('2026-12-25', '2027-01-03')).toBe(10);
+  });
+
+  it('單日行程為 1', () => {
+    expect(daysBetweenInclusive('2026-12-25', '2026-12-25')).toBe(1);
   });
 });
