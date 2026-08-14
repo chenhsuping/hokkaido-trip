@@ -68,7 +68,30 @@ section{padding:78px 0}
 .stat .v{font-family:"Zen Maru Gothic";font-weight:700;font-size:34px;letter-spacing:.02em;line-height:1}
 .stat .v small{font-size:15px;font-weight:500;margin-left:3px;color:var(--ink-2)}
 .stat .k{font-size:11px;letter-spacing:.16em;color:var(--ink-3);margin-top:9px}
-#ovmap{height:460px;border-radius:22px;overflow:hidden;background:#e7e3d6;
+/* ③ 逐日行程：時間軸 + 單一地圖 */
+.top{display:grid;grid-template-columns:300px 1fr;gap:20px;height:min(560px,68vh)}
+.days{background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow-y:auto;padding:14px 12px;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 26px 46px -34px rgba(43,39,33,.5)}
+.day{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;
+  padding:12px 14px 12px 26px;border-radius:12px;cursor:pointer;transition:background .2s}
+.day::before{content:"";position:absolute;left:12px;top:0;bottom:0;width:1px;background:var(--line)}
+.day:first-child::before{top:50%}
+.day:last-child::before{bottom:50%}
+.day::after{content:"";position:absolute;left:9.5px;top:50%;width:6px;height:6px;margin-top:-3px;
+  border-radius:50%;background:#d8d0c1}
+.day:hover{background:#f7f1e4}
+.day.on{background:#dcefff}
+.day.on::after{background:var(--jr);box-shadow:0 0 0 3px rgba(14,122,212,.22)}
+.day.all.on{background:#f2ecff}
+.day.all.on::after{background:var(--stay);box-shadow:0 0 0 3px rgba(122,92,196,.24)}
+.day .lb{font-size:9.5px;letter-spacing:.24em;color:var(--ink-3)}
+.day .dd{font-family:"Zen Maru Gothic";font-weight:700;font-size:18px;letter-spacing:.02em}
+.day .dd em{font-style:normal;font-size:11px;font-weight:500;color:var(--ink-3);margin-left:6px}
+.day .ci{font-size:11.5px;color:var(--ink-2);margin-top:2px}
+.day .md{font-size:19px;opacity:.5}
+.day.on .md{opacity:1}
+.day.pend{opacity:.5}
+#ovmap{border-radius:22px;overflow:hidden;background:#e7e3d6;height:100%;
   box-shadow:0 1px 1px rgba(43,39,33,.05),0 30px 60px -38px rgba(11,19,26,.55)}
 .leaflet-tile-pane{filter:grayscale(.62) sepia(.16) brightness(1.08) contrast(.9) saturate(.95)}
 .leaflet-container{background:#dfe4dc;font-family:"Noto Sans TC",sans-serif}
@@ -252,20 +275,23 @@ footer .wrap{font-size:11px;color:var(--ink-3);letter-spacing:.08em;line-height:
       <div class="stat"><div class="v">36<small>個</small></div><div class="k">造訪地點</div></div>
       <div class="stat"><div class="v" id="km">約 —<small>km</small></div><div class="k">總移動距離</div></div>
     </div>
-    <div id="ovmap"></div>
     <div class="daykey" id="daykey"></div>
   </div>
 </section>
 
-<!-- ③ 逐日行程（沿用現有原型） -->
+<!-- ③ 逐日行程（全站唯一的地圖） -->
 <section id="days" style="padding-top:20px">
   <div class="wrap">
     <div class="shead">
       <div class="cap">Day by day</div>
       <h2>逐日行程</h2>
-      <p>此區塊完全沿用現有原型：左側日期時間軸、右側動畫地圖（交通工具沿實際路線移動、抵達彈出圖卡）、下方當日景點卡片。視覺稿不重複呈現。</p>
+      <p>全站只有這一張地圖。時間軸第一列「全程」是載入後的預設畫面，七天路線同時上色；點任一天則切換成該日的動畫播放。</p>
     </div>
-    <div class="note"><b>已完成</b>　互動與視覺見 <code>design_handoff_hokkaido_trip/screenshots/</code>。實作時把手寫的行程資料換成試算表即時載入，畫面與互動不變。</div>
+    <div class="top">
+      <div class="days" id="daylist"></div>
+      <div id="ovmap"></div>
+    </div>
+    <div class="note"><b>視覺稿範圍</b>　這裡呈現的是「全程」狀態。點選單日後的動畫播放（交通工具沿實際路線移動、抵達彈出圖卡、下方景點卡同步高亮）完全沿用現有原型，見 <code>design_handoff_hokkaido_trip/screenshots/</code>，視覺稿不重做。</div>
   </div>
 </section>
 
@@ -396,13 +422,13 @@ const P = {
   akarenga:[43.06394,141.34800], ichiryuan:[43.06800,141.35600]
 };
 const DAYROUTE = [
-  {d:'12/25', c:'#0e7ad4', label:'新千歲 → 旭川', pts:['chitose','sapporo','asahikawa','hotelAsahikawa','heiwa','hachiya']},
-  {d:'12/26', c:'#12a97a', label:'旭川 → 小樽',   pts:['hotelAsahikawa','busTerm','zoo','asahikawa','sapporo','otaru','nord']},
-  {d:'12/27', c:'#7a5cc4', label:'小樽 → 洞爺',   pts:['nord','sankaku','otaru','sapporo','toyaStn','toyaHotel']},
-  {d:'12/28', c:'#f4622e', label:'洞爺 → 函館（自駕）', pts:['toyaHotel','toyaStn','showa','yunokawaZoo','yukura','hakodateStn','kanemori'], dash:'8 8'},
-  {d:'12/29', c:'#f0ad2a', label:'函館市區',      pts:['komeda','hachiman','yamazaki','ropeway','gotoken']},
-  {d:'12/30', c:'#c2557a', label:'五稜郭',        pts:['gotoken','goryokaku','daikokuya']},
-  {d:'12/31', c:'#0e7ad4', label:'函館 → 札幌',   pts:['asaichi','hakodateStn','sapporo','susukino','odori','tokeidai','akarenga','ichiryuan']}
+  {d:'12/25', w:'五', c:'#0e7ad4', mode:'🚆', label:'新千歲 → 旭川', pts:['chitose','sapporo','asahikawa','hotelAsahikawa','heiwa','hachiya']},
+  {d:'12/26', w:'六', c:'#12a97a', mode:'🚌', label:'旭川 → 小樽',   pts:['hotelAsahikawa','busTerm','zoo','asahikawa','sapporo','otaru','nord']},
+  {d:'12/27', w:'日', c:'#7a5cc4', mode:'🚆', label:'小樽 → 洞爺',   pts:['nord','sankaku','otaru','sapporo','toyaStn','toyaHotel']},
+  {d:'12/28', w:'一', c:'#f4622e', mode:'🚗', label:'洞爺 → 函館（自駕）', pts:['toyaHotel','toyaStn','showa','yunokawaZoo','yukura','hakodateStn','kanemori'], dash:'8 8'},
+  {d:'12/29', w:'二', c:'#f0ad2a', mode:'🚶', label:'函館市區',      pts:['komeda','hachiman','yamazaki','ropeway','gotoken']},
+  {d:'12/30', w:'三', c:'#c2557a', mode:'🚋', label:'五稜郭',        pts:['gotoken','goryokaku','daikokuya']},
+  {d:'12/31', w:'四', c:'#0e7ad4', mode:'🚆', label:'函館 → 札幌',   pts:['asaichi','hakodateStn','sapporo','susukino','odori','tokeidai','akarenga','ichiryuan']}
 ];
 
 const map = L.map('ovmap',{zoomControl:false,scrollWheelZoom:false,zoomSnap:.25});
@@ -431,6 +457,25 @@ map.fitBounds(L.latLngBounds(all),{padding:[46,46]});
 document.getElementById('km').innerHTML = '約 ' + Math.round(totalKm) + '<small>km</small>';
 document.getElementById('daykey').innerHTML = DAYROUTE.map(r=>
   `<b><i style="background:${r.c}"></i>${r.d}　${r.label}</b>`).join('');
+
+/* ③ 日期時間軸 — 首列「全程」為預設選取 */
+document.getElementById('daylist').innerHTML =
+  `<div class="day all on">
+     <div><div class="lb">OVERVIEW</div><div class="dd">全程<em>7 天</em></div>
+     <div class="ci">旭川 · 小樽 · 洞爺 · 函館 · 札幌</div></div>
+     <div class="md">🗺️</div>
+   </div>` +
+  DAYROUTE.map((r,i)=>`
+   <div class="day">
+     <div><div class="lb">DAY ${i+1}</div><div class="dd">${r.d}<em>（${r.w}）</em></div>
+     <div class="ci">${r.label}</div></div>
+     <div class="md">${r.mode}</div>
+   </div>`).join('') +
+  `<div class="day pend">
+     <div><div class="lb">DAY 8–10</div><div class="dd">01/01 — 01/03</div>
+     <div class="ci">待規劃（住宿與回程已訂）</div></div>
+     <div class="md">·</div>
+   </div>`;
 
 /* ---------- ④ 五座城市 ---------- */
 const CITIES = [
