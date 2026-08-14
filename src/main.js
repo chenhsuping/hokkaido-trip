@@ -11,6 +11,7 @@ import { parseDining, ramenTrio } from './dining.js';
 import { buildLodging } from './lodging.js';
 import { summarizeBudget } from './budget.js';
 import { RATE } from '../config.js';
+import { summarizePrep } from './prep.js';
 import { findDateAnomalies } from './dates.js';
 import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
@@ -219,6 +220,19 @@ async function start() {
             <div class="nm">${it.name}<i>${it.category} · ${it.subcategory}</i></div>
             <div class="amt">${it.filled ? nt(Math.round(it.twd)) + (it.jpy ? `<em>${jp(it.jpy)}</em>` : '') : '待補'}</div>
           </div>`).join('')}
+      </div>
+    </div>`;
+
+  const prep = summarizePrep(tabs.todo.ok ? tabs.todo.rows : []);
+  document.getElementById('prepblock').innerHTML = `
+    <div class="prep">
+      <div class="ring"><div class="pct">${prep.pct}%</div>
+        <div class="sub">${prep.doneCount} / ${prep.totalCount} 項完成</div></div>
+      <div class="tasks">${prep.items.map(it => `
+        <div class="task ${it.done ? 'done' : 'open'}">
+          <span class="mk">${it.done ? '✓' : ''}</span>
+          <span class="tx">${it.name}<i>${it.category}</i></span>
+        </div>`).join('')}
       </div>
     </div>`;
 
