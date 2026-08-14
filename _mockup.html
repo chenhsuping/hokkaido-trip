@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>北海道小旅行 — 視覺稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --ink:#2b2721; --ink-2:#6a6055; --ink-3:#a89c8c;
+  --paper:#fffefb; --bg:#fff4e2; --line:rgba(43,39,33,.12);
+  --jr:#0e7ad4; --drive:#f4622e; --bus:#12a97a; --walk:#f0ad2a; --stay:#7a5cc4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--ink); background:var(--bg);
+  background-image:linear-gradient(180deg,#fff8ec,#fff2dc 55%,#ffeed3);
+  background-attachment:fixed;
+  font-family:"Noto Sans TC",system-ui,sans-serif; font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif}
+.wrap{max-width:1560px;margin:0 auto;padding:0 40px}
+.cap{font-size:10px;letter-spacing:.26em;font-weight:500;color:var(--drive);text-transform:uppercase}
+
+/* ⑨ 導覽列 */
+nav{
+  position:sticky; top:0; z-index:1000;
+  background:rgba(255,248,236,.86); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;gap:24px}
+nav .brand{font-family:"Zen Maru Gothic";font-weight:700;font-size:15px;letter-spacing:.1em}
+nav ul{display:flex;gap:26px;list-style:none;margin:0;padding:0}
+nav a{color:var(--ink-2);text-decoration:none;font-size:12.5px;letter-spacing:.08em;font-weight:500;padding:6px 0;border-bottom:2px solid transparent;transition:.2s}
+nav a:hover{color:var(--ink);border-bottom-color:var(--drive)}
+nav a.on{color:var(--ink);border-bottom-color:var(--drive)}
+
+/* ① 封面 */
+.hero{position:relative;height:min(620px,78vh);overflow:hidden;display:flex;align-items:flex-end}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,12,.42) 0%,rgba(20,16,12,.12) 34%,rgba(20,16,12,.72) 100%)}
+.hero .wrap{position:relative;z-index:2;padding-bottom:46px;width:100%;color:#fff;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:36px;flex-wrap:wrap}
+.hero .cap{color:#ffd9c6}
+.hero h1{font-size:60px;font-weight:700;letter-spacing:.13em;line-height:1.1;margin:12px 0 14px;
+  text-shadow:0 2px 24px rgba(0,0,0,.35)}
+.hero .dates{font-size:15px;letter-spacing:.12em;font-weight:500;margin-bottom:8px}
+.hero .cities{font-size:13px;letter-spacing:.2em;color:rgba(255,255,255,.82)}
+.countdown{text-align:right;flex-shrink:0}
+.countdown .num{font-family:"Zen Maru Gothic";font-weight:700;font-size:66px;line-height:1;letter-spacing:.02em;
+  text-shadow:0 2px 24px rgba(0,0,0,.35)}
+.countdown .lbl{font-size:11px;letter-spacing:.24em;color:rgba(255,255,255,.8);margin-top:8px}
+
+/* 區塊通用 */
+section{padding:78px 0}
+.shead{margin-bottom:34px}
+.shead h2{font-size:27px;font-weight:700;letter-spacing:.09em;margin:9px 0 8px}
+.shead p{font-size:13px;color:var(--ink-2);line-height:1.9;margin:0;max-width:660px}
+
+/* ② 總覽 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:26px}
+.stat{background:var(--paper);padding:24px 26px}
+.stat .v{font-family:"Zen Maru Gothic";font-weight:700;font-size:34px;letter-spacing:.02em;line-height:1}
+.stat .v small{font-size:15px;font-weight:500;margin-left:3px;color:var(--ink-2)}
+.stat .k{font-size:11px;letter-spacing:.16em;color:var(--ink-3);margin-top:9px}
+#ovmap{height:460px;border-radius:22px;overflow:hidden;background:#e7e3d6;
+  box-shadow:0 1px 1px rgba(43,39,33,.05),0 30px 60px -38px rgba(11,19,26,.55)}
+.leaflet-tile-pane{filter:grayscale(.62) sepia(.16) brightness(1.08) contrast(.9) saturate(.95)}
+.leaflet-container{background:#dfe4dc;font-family:"Noto Sans TC",sans-serif}
+.daykey{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.daykey b{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--line);
+  border-radius:99px;padding:7px 15px;font-size:11.5px;font-weight:500;letter-spacing:.06em}
+.daykey i{width:20px;height:2.5px;border-radius:2px;display:block}
+
+/* ④ 城市 */
+.cities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+.city{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);
+  transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column}
+.city:hover{transform:translateY(-3px);box-shadow:0 1px 1px rgba(43,39,33,.03),0 26px 40px -28px rgba(43,39,33,.6)}
+.city .ph{aspect-ratio:4/3;background:#f4ece0;position:relative;overflow:hidden}
+.city .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.city .ph .idx{position:absolute;top:13px;left:13px;background:rgba(255,254,251,.93);
+  border-radius:99px;padding:4px 12px;font-size:10.5px;letter-spacing:.16em;font-weight:500}
+.city .bd{padding:18px 20px 22px;display:flex;flex-direction:column;gap:9px;flex:1}
+.city h3{font-size:19px;font-weight:700;letter-spacing:.05em;margin:0}
+.city h3 span{font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.12em;margin-left:9px}
+.city p{font-size:12.5px;line-height:1.9;color:var(--ink-2);margin:0;text-wrap:pretty}
+.city .spots{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+.city .spots b{font-size:10.5px;font-weight:400;color:var(--ink-2);background:#f7f1e4;
+  border-radius:99px;padding:4px 10px;letter-spacing:.03em}
+
+/* ⑤ 吃什麼 */
+.ramen{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:32px 34px;margin-bottom:30px;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 26px 46px -34px rgba(43,39,33,.5)}
+.ramen .rh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.ramen .rh h3{font-size:22px;font-weight:700;letter-spacing:.07em;margin:0}
+.ramen .rh em{font-style:normal;font-size:11.5px;letter-spacing:.14em;color:var(--drive);font-weight:500}
+.ramen>p{font-size:12.5px;line-height:1.9;color:var(--ink-2);margin:0 0 24px;max-width:680px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.rcard{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+.rcard .ph{aspect-ratio:16/10;background:#f4ece0}
+.rcard .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.rcard .bd{padding:15px 17px 18px}
+.rcard .ty{display:inline-block;background:var(--drive);color:#fff;border-radius:99px;
+  padding:3px 12px;font-size:11px;letter-spacing:.1em;font-weight:500;margin-bottom:9px}
+.rcard h4{font-family:"Zen Maru Gothic";font-size:16px;font-weight:700;letter-spacing:.03em;margin:0 0 5px}
+.rcard .mt{font-size:10.5px;letter-spacing:.1em;color:var(--ink-3)}
+.eats{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:18px}
+.eat{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 16px 28px -28px rgba(43,39,33,.6)}
+.eat .ph{aspect-ratio:4/3;background:#f4ece0}
+.eat .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.eat .bd{padding:13px 15px 16px}
+.eat .tg{font-size:10px;letter-spacing:.14em;color:var(--jr);font-weight:500}
+.eat h4{font-family:"Zen Maru Gothic";font-size:14px;font-weight:700;margin:6px 0 4px;letter-spacing:.03em}
+.eat .mt{font-size:10.5px;color:var(--ink-3);letter-spacing:.06em;line-height:1.7}
+
+/* ⑥ 住哪裡 */
+.stays{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:22px}
+.stay{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);transition:transform .25s}
+.stay:hover{transform:translateY(-3px)}
+.stay .ph{aspect-ratio:16/10;background:#f4ece0;position:relative;overflow:hidden}
+.stay .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.stay .ph .nights{position:absolute;top:12px;left:12px;background:var(--stay);color:#fff;
+  border-radius:99px;padding:4px 12px;font-size:10.5px;letter-spacing:.12em;font-weight:500}
+.stay .bd{padding:16px 18px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
+.stay .ct{font-size:10.5px;letter-spacing:.16em;color:var(--ink-3)}
+.stay h3{font-size:16px;font-weight:700;letter-spacing:.03em;margin:0;line-height:1.45}
+.stay .dt{font-size:11.5px;color:var(--ink-2);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.stay .ft{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:11px;
+  border-top:1px dashed rgba(43,39,33,.16)}
+.stay .price{font-family:"Zen Maru Gothic";font-weight:700;font-size:17px;letter-spacing:.02em}
+.stay .price.todo{font-size:12px;font-weight:500;color:var(--ink-3);font-family:"Noto Sans TC"}
+.badge{font-size:10px;letter-spacing:.1em;font-weight:500;border-radius:99px;padding:4px 10px}
+.badge.ok{background:#e3f6ee;color:#0d7a58}
+.badge.no{background:#fdece5;color:#c2451c}
+.stay .memo{font-size:10.5px;color:var(--ink-3);letter-spacing:.05em}
+
+/* ⑦ 花多少 */
+.costtop{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:24px}
+.costtop .stat .v{font-size:30px}
+.rate{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--line);
+  border-radius:99px;padding:6px 15px;font-size:11.5px;letter-spacing:.06em;color:var(--ink-2);margin-bottom:22px}
+.rate b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.rate em{font-style:normal;color:var(--ink-3);font-size:10.5px}
+.costgrid{display:grid;grid-template-columns:1fr 1.25fr;gap:24px;align-items:start}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:24px 26px;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6)}
+.panel h3{font-size:14px;font-weight:700;letter-spacing:.1em;margin:0 0 18px;color:var(--ink-2)}
+.cat{margin-bottom:17px}
+.cat .top{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:7px}
+.cat .top b{font-weight:500;letter-spacing:.08em}
+.cat .top span{font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.bar{height:7px;border-radius:99px;background:#f0e8da;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px}
+.citem{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;
+  padding:11px 0;border-bottom:1px dashed rgba(43,39,33,.13)}
+.citem:last-child{border-bottom:0}
+.citem .nm{font-size:12.5px;letter-spacing:.03em}
+.citem .nm i{font-style:normal;display:block;font-size:10px;color:var(--ink-3);letter-spacing:.1em;margin-top:3px}
+.citem .amt{font-family:"Zen Maru Gothic";font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.citem .amt em{font-style:normal;font-size:10.5px;color:var(--ink-3);font-weight:500;display:block;
+  font-family:"Noto Sans TC";margin-top:2px}
+.citem.blank .nm{color:var(--ink-3)}
+.citem.blank .amt{font-size:11px;font-weight:400;color:var(--ink-3);font-family:"Noto Sans TC"}
+
+/* ⑩ 行前準備 */
+.prep{display:grid;grid-template-columns:250px 1fr;gap:24px;align-items:start}
+.ring{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:34px 20px;
+  box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6)}
+.ring .pct{font-family:"Zen Maru Gothic";font-weight:700;font-size:46px;line-height:1}
+.ring .sub{font-size:11px;letter-spacing:.14em;color:var(--ink-3)}
+.tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(266px,1fr));gap:11px}
+.task{display:flex;align-items:flex-start;gap:11px;background:var(--paper);border:1px solid var(--line);
+  border-radius:13px;padding:13px 15px}
+.task .mk{width:17px;height:17px;border-radius:50%;flex-shrink:0;margin-top:1px;display:grid;place-items:center;
+  font-size:10px;color:#fff;font-weight:700}
+.task.done .mk{background:#12a97a}
+.task.open .mk{background:transparent;border:1.5px solid #d8cdb9}
+.task .tx{font-size:12px;line-height:1.55;letter-spacing:.02em}
+.task .tx i{font-style:normal;display:block;font-size:10px;color:var(--ink-3);letter-spacing:.1em;margin-top:4px}
+.task.done .tx{color:var(--ink-3)}
+
+/* 註記（僅視覺稿用） */
+.note{background:#fffbe9;border:1px dashed rgba(244,98,46,.5);border-radius:14px;padding:16px 20px;
+  font-size:12px;line-height:1.9;color:var(--ink-2);margin-top:30px}
+.note b{color:var(--drive);letter-spacing:.06em}
+footer{padding:50px 0 70px;border-top:1px solid var(--line);margin-top:30px}
+footer .wrap{font-size:11px;color:var(--ink-3);letter-spacing:.08em;line-height:2}
+
+@media(max-width:1080px){.wrap{padding:0 24px}.stats{grid-template-columns:repeat(2,1fr)}
+  .costgrid{grid-template-columns:1fr}.prep{grid-template-columns:1fr}}
+@media(max-width:820px){.hero h1{font-size:40px}.countdown .num{font-size:46px}.trio{grid-template-columns:1fr}
+  .costtop{grid-template-columns:1fr}}
+@media(max-width:560px){.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">北海道小旅行</div>
+    <ul>
+      <li><a href="#ov" class="on">總覽</a></li>
+      <li><a href="#days">逐日行程</a></li>
+      <li><a href="#cities">五座城市</a></li>
+      <li><a href="#food">吃什麼</a></li>
+      <li><a href="#stay">住哪裡</a></li>
+      <li><a href="#cost">花多少</a></li>
+      <li><a href="#prep">行前準備</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ① 封面 -->
+<header class="hero">
+  <img src="design_handoff_hokkaido_trip/uploads/pasted-1786602603104-0.png" alt="小樽運河夜景">
+  <div class="wrap">
+    <div>
+      <div class="cap">Hokkaido · Winter Itinerary</div>
+      <h1>北海道小旅行</h1>
+      <div class="dates">2026.12.25 — 2027.01.03　<span style="opacity:.72">10 天 9 晚</span></div>
+      <div class="cities">旭川　小樽　洞爺　函館　札幌</div>
+    </div>
+    <div class="countdown">
+      <div class="num" id="cd">D-133</div>
+      <div class="lbl">距離出發</div>
+    </div>
+  </div>
+</header>
+
+<!-- ② 總覽 -->
+<section id="ov">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">Overview</div>
+      <h2>這趟怎麼走</h2>
+      <p>先一路北上到旭川，再往南經小樽、洞爺抵達函館，最後拉回札幌跨年。走完北海道的西半邊。</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v">7<small> / 10 天</small></div><div class="k">已規劃天數</div></div>
+      <div class="stat"><div class="v">5<small>座</small></div><div class="k">停留城市</div></div>
+      <div class="stat"><div class="v">36<small>個</small></div><div class="k">造訪地點</div></div>
+      <div class="stat"><div class="v" id="km">約 —<small>km</small></div><div class="k">總移動距離</div></div>
+    </div>
+    <div id="ovmap"></div>
+    <div class="daykey" id="daykey"></div>
+  </div>
+</section>
+
+<!-- ③ 逐日行程（沿用現有原型） -->
+<section id="days" style="padding-top:20px">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">Day by day</div>
+      <h2>逐日行程</h2>
+      <p>此區塊完全沿用現有原型：左側日期時間軸、右側動畫地圖（交通工具沿實際路線移動、抵達彈出圖卡）、下方當日景點卡片。視覺稿不重複呈現。</p>
+    </div>
+    <div class="note"><b>已完成</b>　互動與視覺見 <code>design_handoff_hokkaido_trip/screenshots/</code>。實作時把手寫的行程資料換成試算表即時載入，畫面與互動不變。</div>
+  </div>
+</section>
+
+<!-- ④ 五座城市 -->
+<section id="cities">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">Five cities</div>
+      <h2>五座城市</h2>
+      <p>每座城市停留的天數、去了哪些地方，以及它在這趟行程裡是什麼角色。</p>
+    </div>
+    <div class="cities-grid" id="cities-grid"></div>
+    <div class="note"><b>待補</b>　城市介紹文案目前是暫擬的，實作時請你確認或改寫。札幌在 Day 1–3 只是轉車經過，停留天數只算 Day 7。</div>
+  </div>
+</section>
+
+<!-- ⑤ 吃什麼 -->
+<section id="food">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">What to eat</div>
+      <h2>吃什麼</h2>
+      <p>行程裡的餐飲安排全部自動從試算表的「活動內容」欄撈出來，不需另外維護。</p>
+    </div>
+
+    <div class="ramen">
+      <div class="rh"><h3>北海道拉麵三大天王</h3><em>全中</em></div>
+      <p>札幌味噌、旭川醬油、函館鹽味並稱北海道三大拉麵。這趟行程的三家店剛好各據一方，三種流派一次收齊。</p>
+      <div class="trio" id="trio"></div>
+    </div>
+
+    <div class="eats" id="eats"></div>
+  </div>
+</section>
+
+<!-- ⑥ 住哪裡 -->
+<section id="stay">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">Where to stay</div>
+      <h2>住哪裡</h2>
+      <p>九個晚上、五間住宿。資料來自「住宿」頁籤，未填的欄位以待補標示，不會憑空生出數字。</p>
+    </div>
+    <div class="stays" id="stays"></div>
+    <div class="note"><b>資料落差</b>　「住宿」頁籤只填了前三間，函館與札幌那兩列是空白的；但「待辦清單」頁籤顯示這兩間都已訂房完成。網站顯示為已訂房、費用待補。</div>
+  </div>
+</section>
+
+<!-- ⑦ 花多少 -->
+<section id="cost">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">Budget</div>
+      <h2>花多少</h2>
+      <p>資料來自「費用規劃」頁籤。該頁同時有日圓與台幣兩種幣別，網站統一換算成台幣後合計。</p>
+    </div>
+
+    <div class="rate">匯率　<b>¥1 = NT$<span id="rateval">0.21</span></b>　<em>寫在設定檔，可自行調整</em></div>
+
+    <div class="costtop">
+      <div class="stat"><div class="v" id="ctotal">—</div><div class="k">已登錄總額（台幣）</div></div>
+      <div class="stat"><div class="v" id="cfilled">—</div><div class="k">已填金額項數</div></div>
+    </div>
+
+    <div class="costgrid">
+      <div class="panel">
+        <h3>分類佔比</h3>
+        <div id="cats"></div>
+      </div>
+      <div class="panel">
+        <h3>明細</h3>
+        <div id="citems"></div>
+      </div>
+    </div>
+
+    <div class="note"><b>重要</b>　13 個項目裡有 6 項還沒填金額（租車、成吉思汗、三角市場、旭山動物園門票、eSim、保險）。此外<b>函館與札幌的住宿根本沒列進這個頁籤</b>——它們只出現在「待辦清單」。<b>所以這個總額是低估的</b>，畫面標示為「已登錄總額」而非「總預算」，避免誤判。</div>
+  </div>
+</section>
+
+<!-- ⑩ 行前準備 -->
+<section id="prep">
+  <div class="wrap">
+    <div class="shead">
+      <div class="cap">Preparation</div>
+      <h2>行前準備</h2>
+      <p>資料來自「待辦清單」頁籤，勾選狀態即時同步。</p>
+    </div>
+    <div class="prep">
+      <div class="ring">
+        <div class="pct" id="ppct">—</div>
+        <div class="sub" id="psub">—</div>
+      </div>
+      <div class="tasks" id="tasks"></div>
+    </div>
+    <div class="note"><b>時間敏感</b>　<b>駕照譯本</b>尚未辦理，但 12/28 那天要租車自駕。譯本需在台灣的監理站辦妥後帶出國，到日本才發現就來不及了。</div>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  視覺稿 · 2026-08-14　｜　地圖圖磚 © OpenStreetMap contributors<br>
+  行程資料即時取自 Google 試算表；照片為使用者提供之參考圖。
+</div></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const U = 'design_handoff_hokkaido_trip/uploads/';
+
+/* ---------- ① 倒數 ---------- */
+(function(){
+  const go = new Date('2026-12-25T00:00:00+09:00');
+  const d = Math.ceil((go - new Date()) / 86400000);
+  document.getElementById('cd').textContent = d > 0 ? 'D-' + d : (d === 0 ? 'D-DAY' : '已出發');
+})();
+
+/* ---------- ② 總覽地圖 ---------- */
+const P = {
+  chitose:[42.7750,141.6920], sapporo:[43.0686,141.3507], asahikawa:[43.76075,142.36473],
+  hotelAsahikawa:[43.75940,142.36170], heiwa:[43.76860,142.36280], hachiya:[43.77000,142.36400],
+  busTerm:[43.76040,142.36520], zoo:[43.76803,142.47978],
+  otaru:[43.19756,140.99386], nord:[43.19840,141.00060], sankaku:[43.19770,140.99320],
+  toyaStn:[42.56610,140.77630], toyaHotel:[42.56417,140.81778], showa:[42.54250,140.86444],
+  yunokawaZoo:[41.78030,140.79480], yukura:[41.78211,140.79100],
+  hakodateStn:[41.77370,140.72640], jujigai:[41.76496,140.71632], kanemori:[41.76618,140.71645],
+  komeda:[41.7690,140.7180], hachiman:[41.7620,140.7110], yamazaki:[41.7640,140.7150],
+  ropeway:[41.7590,140.7080], gotoken:[41.7640,140.7160],
+  goryokaku:[41.79690,140.75696], daikokuya:[41.79600,140.75980], asaichi:[41.77256,140.72538],
+  susukino:[43.0540,141.3540], odori:[43.06109,141.35643], tokeidai:[43.06250,141.35361],
+  akarenga:[43.06394,141.34800], ichiryuan:[43.06800,141.35600]
+};
+const DAYROUTE = [
+  {d:'12/25', c:'#0e7ad4', label:'新千歲 → 旭川', pts:['chitose','sapporo','asahikawa','hotelAsahikawa','heiwa','hachiya']},
+  {d:'12/26', c:'#12a97a', label:'旭川 → 小樽',   pts:['hotelAsahikawa','busTerm','zoo','asahikawa','sapporo','otaru','nord']},
+  {d:'12/27', c:'#7a5cc4', label:'小樽 → 洞爺',   pts:['nord','sankaku','otaru','sapporo','toyaStn','toyaHotel']},
+  {d:'12/28', c:'#f4622e', label:'洞爺 → 函館（自駕）', pts:['toyaHotel','toyaStn','showa','yunokawaZoo','yukura','hakodateStn','kanemori'], dash:'8 8'},
+  {d:'12/29', c:'#f0ad2a', label:'函館市區',      pts:['komeda','hachiman','yamazaki','ropeway','gotoken']},
+  {d:'12/30', c:'#c2557a', label:'五稜郭',        pts:['gotoken','goryokaku','daikokuya']},
+  {d:'12/31', c:'#0e7ad4', label:'函館 → 札幌',   pts:['asaichi','hakodateStn','sapporo','susukino','odori','tokeidai','akarenga','ichiryuan']}
+];
+
+const map = L.map('ovmap',{zoomControl:false,scrollWheelZoom:false,zoomSnap:.25});
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {attribution:'&copy; OpenStreetMap contributors',maxZoom:19}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
+
+let all = [], totalKm = 0;
+const R = 6371, rad = x => x*Math.PI/180;
+function hav(a,b){
+  const dLat=rad(b[0]-a[0]), dLng=rad(b[1]-a[1]);
+  const h=Math.sin(dLat/2)**2 + Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+DAYROUTE.forEach(r=>{
+  const line = r.pts.map(k=>P[k]);
+  for(let i=1;i<line.length;i++) totalKm += hav(line[i-1],line[i]);
+  L.polyline(line,{color:r.c,weight:3.2,opacity:.85,dashArray:r.dash||null,lineCap:'round'}).addTo(map);
+  all = all.concat(line);
+});
+DAYROUTE.forEach(r=>{
+  const end = P[r.pts[r.pts.length-1]];
+  L.circleMarker(end,{radius:5,color:'#fff',weight:2,fillColor:r.c,fillOpacity:1}).addTo(map);
+});
+map.fitBounds(L.latLngBounds(all),{padding:[46,46]});
+document.getElementById('km').innerHTML = '約 ' + Math.round(totalKm) + '<small>km</small>';
+document.getElementById('daykey').innerHTML = DAYROUTE.map(r=>
+  `<b><i style="background:${r.c}"></i>${r.d}　${r.label}</b>`).join('');
+
+/* ---------- ④ 五座城市 ---------- */
+const CITIES = [
+  {n:'旭川', en:'Asahikawa', days:'Day 1–2', img:'pasted-1786602996832-0.png',
+   d:'行程的最北點。從新千歲搭特急北上三小時抵達，隔天一早直奔冬季限定的企鵝散步。',
+   s:['平和通商店街','蜂屋 五条創業店','旭山動物園','旭川 JR 酒店']},
+  {n:'小樽', en:'Otaru', days:'Day 2–3', img:'pasted-1786603092518-0.png',
+   d:'只待一個晚上加一個早上。傍晚抵達，隔天在三角市場吃完海鮮丼就上車南下。',
+   s:['三角市場','若鶏時代 なると 本店','Nord 小樽飯店']},
+  {n:'洞爺', en:'Toya', days:'Day 3–4', img:'pasted-1786603324026-0.png',
+   d:'唯一的溫泉夜。湖畔泡完湯，隔天早上取車，這趟唯一的自駕日從這裡開始。',
+   s:['洞爺觀光酒店','昭和新山熊牧場','JR Rent-A-Car Toya']},
+  {n:'函館', en:'Hakodate', days:'Day 4–7', img:'pasted-1786603639537-0.png',
+   d:'待最久的城市，整整三個晚上。夜景、元町坡道、五稜郭、朝市，還有吃不完的東西。',
+   s:['函館山纜車','八幡坂','五稜郭公園','金森紅磚倉庫','函館朝市','五島軒 雪河亭']},
+  {n:'札幌', en:'Sapporo', days:'Day 7–10', img:'pasted-1786609863503-0.png',
+   d:'前面三天都只是在這裡轉車，最後才真正走進市區。大通、時計台、道廳，然後跨年。1/1–1/2 尚未規劃。',
+   s:['大通公園、札幌電視塔','札幌時計台','北海道廳舊本廳舍','札幌一粒庵']}
+];
+document.getElementById('cities-grid').innerHTML = CITIES.map((c,i)=>`
+  <article class="city">
+    <div class="ph"><img src="${U+c.img}" alt="${c.n}"><span class="idx">${c.days}</span></div>
+    <div class="bd">
+      <h3>${c.n}<span>${c.en}</span></h3>
+      <p>${c.d}</p>
+      <div class="spots">${c.s.map(x=>`<b>${x}</b>`).join('')}</div>
+    </div>
+  </article>`).join('');
+
+/* ---------- ⑤ 吃什麼 ---------- */
+const TRIO = [
+  {ty:'醬油', n:'蜂屋 五条創業店', mt:'旭川　12/25 18:00　晚餐', img:'pasted-1786602844318-0.png'},
+  {ty:'鹽味', n:'山崎洋服店',      mt:'函館　12/29 12:00　午餐', img:'pasted-1786603903460-0.png'},
+  {ty:'味噌', n:'札幌一粒庵',      mt:'札幌　12/31 18:00　晚餐', img:'pasted-1786604027649-0.png'}
+];
+document.getElementById('trio').innerHTML = TRIO.map(r=>`
+  <div class="rcard">
+    <div class="ph"><img src="${U+r.img}" alt="${r.n}"></div>
+    <div class="bd"><span class="ty">${r.ty}</span><h4>${r.n}</h4><div class="mt">${r.mt}</div></div>
+  </div>`).join('');
+
+const EATS = [
+  {tg:'12/26 · 晚餐', n:'若鶏時代 なると 本店', mt:'小樽　若雞定食', img:null},
+  {tg:'12/27 · 午餐', n:'三角市場',            mt:'小樽　海鮮丼', img:'pasted-1786603092518-0.png'},
+  {tg:'12/28 · 晚餐', n:'金森紅磚倉庫',        mt:'函館　Lucky Pierrot', img:'pasted-1786603495583-0.png'},
+  {tg:'12/29 · 早餐', n:'客美多咖啡 函館港濱店', mt:'函館　早餐', img:'pasted-1786603837584-0.png'},
+  {tg:'12/29 · 晚餐', n:'五島軒 雪河亭',        mt:'函館　法國風咖哩、蛋包飯', img:'pasted-1786603742821-0.png'},
+  {tg:'12/30 · 午餐', n:'成吉思汗大黑屋',       mt:'函館　烤羊肉', img:'pasted-1786603953928-0.png'}
+];
+document.getElementById('eats').innerHTML = EATS.map(e=>`
+  <article class="eat">
+    <div class="ph">${e.img?`<img src="${U+e.img}" alt="${e.n}">`:''}</div>
+    <div class="bd"><div class="tg">${e.tg}</div><h4>${e.n}</h4><div class="mt">${e.mt}</div></div>
+  </article>`).join('');
+
+/* ---------- 共用 ---------- */
+const RATE = 0.21;                       // ¥1 = NT$0.21（設定檔值）
+const nt = n => 'NT$' + n.toLocaleString('en-US',{maximumFractionDigits:0});
+const jp = n => '¥' + n.toLocaleString('en-US');
+
+/* ---------- ⑥ 住哪裡 ---------- */
+const STAYS = [
+  {city:'旭川', n:'旭川 JR 酒店', in:'12/25', out:'12/26', nights:1, ntd:3709, booked:true,
+   memo:'含早餐', img:'pasted-1786607686879-0.png'},
+  {city:'小樽', n:'Nord 小樽飯店', in:'12/26', out:'12/27', nights:1, ntd:6817, booked:true,
+   memo:'含早餐', img:'pasted-1786602603104-0.png'},
+  {city:'洞爺', n:'洞爺觀光酒店', in:'12/27', out:'12/28', nights:1, ntd:6266, booked:true,
+   memo:'含早餐、晚餐', img:'pasted-1786603324026-0.png'},
+  {city:'函館', n:'Condominium View Mt Hakodate', in:'12/28', out:'12/31', nights:3, ntd:null, booked:true,
+   memo:'「住宿」頁籤未填', img:'pasted-1786608263591-0.png'},
+  {city:'札幌', n:'Downtown area Susukino IK901', in:'12/31', out:'01/03', nights:3, ntd:null, booked:true,
+   memo:'「住宿」頁籤未填', img:'pasted-1786609863503-0.png'}
+];
+document.getElementById('stays').innerHTML = STAYS.map(s=>`
+  <article class="stay">
+    <div class="ph"><img src="${U+s.img}" alt="${s.n}"><span class="nights">${s.nights} 晚</span></div>
+    <div class="bd">
+      <div class="ct">${s.city}</div>
+      <h3>${s.n}</h3>
+      <div class="dt">${s.in} — ${s.out}</div>
+      <div class="memo">${s.memo}</div>
+      <div class="ft">
+        <div class="price${s.ntd?'':' todo'}">${s.ntd ? nt(s.ntd) : '費用待補'}</div>
+        <span class="badge ${s.booked?'ok':'no'}">${s.booked?'已訂房':'未訂房'}</span>
+      </div>
+    </div>
+  </article>`).join('');
+
+/* ---------- ⑦ 花多少 ---------- */
+const COST = [
+  {c:'交通', s:'機票',     n:'台灣虎航 IT234',              ntd:42957, jpy:null},
+  {c:'交通', s:'機票',     n:'亞洲航空 FD243',              ntd:null,  jpy:197815},
+  {c:'交通', s:'大眾運輸', n:'JR Hokkaido Rail Pass 7-Day', ntd:null,  jpy:56000},
+  {c:'交通', s:'大眾運輸', n:'ICOCA 儲值',                  ntd:null,  jpy:8000},
+  {c:'交通', s:'租車',     n:'JR Rent-A-Car',               ntd:null,  jpy:null},
+  {c:'住宿', s:'住宿',     n:'旭川 JR 酒店',                ntd:3709,  jpy:null},
+  {c:'住宿', s:'住宿',     n:'Nord 小樽飯店',               ntd:6817,  jpy:null},
+  {c:'住宿', s:'住宿',     n:'洞爺觀光酒店',                ntd:6266,  jpy:null},
+  {c:'餐飲', s:'餐飲',     n:'成吉思汗大黑屋',              ntd:null,  jpy:null},
+  {c:'餐飲', s:'餐飲',     n:'三角市場',                    ntd:null,  jpy:null},
+  {c:'生活', s:'門票',     n:'旭山動物園',                  ntd:null,  jpy:null},
+  {c:'生活', s:'通訊',     n:'eSim',                        ntd:null,  jpy:null},
+  {c:'生活', s:'保險',     n:'旅遊平安險+旅遊不便險',        ntd:null,  jpy:null}
+];
+const CATCOL = {'交通':'#0e7ad4','住宿':'#7a5cc4','餐飲':'#f4622e','生活':'#12a97a'};
+const twd = r => (r.ntd || 0) + (r.jpy ? r.jpy * RATE : 0);
+
+const filled = COST.filter(r => r.ntd || r.jpy);
+const total  = COST.reduce((a,r) => a + twd(r), 0);
+document.getElementById('rateval').textContent = RATE;
+document.getElementById('ctotal').innerHTML = nt(Math.round(total));
+document.getElementById('cfilled').innerHTML =
+  filled.length + '<small> / ' + COST.length + ' 項</small>';
+
+const byCat = {};
+COST.forEach(r => { byCat[r.c] = (byCat[r.c] || 0) + twd(r); });
+document.getElementById('cats').innerHTML = Object.entries(byCat)
+  .sort((a,b) => b[1] - a[1])
+  .map(([c,v]) => `
+    <div class="cat">
+      <div class="top"><b>${c}</b><span>${v ? nt(Math.round(v)) : '待補'}</span></div>
+      <div class="bar"><i style="width:${total ? v/total*100 : 0}%;background:${CATCOL[c]}"></i></div>
+    </div>`).join('');
+
+document.getElementById('citems').innerHTML = COST.map(r=>{
+  const has = r.ntd || r.jpy;
+  const orig = r.jpy ? `<em>${jp(r.jpy)}</em>` : '';
+  return `<div class="citem${has?'':' blank'}">
+    <div class="nm">${r.n}<i>${r.c} · ${r.s}</i></div>
+    <div class="amt">${has ? nt(Math.round(twd(r))) + orig : '待補'}</div>
+  </div>`;
+}).join('');
+
+/* ---------- ⑩ 行前準備 ---------- */
+const TASKS = [
+  {c:'交通', n:'去程機票 (12/25)',                          done:true},
+  {c:'交通', n:'回程機票 (01/03)',                          done:true},
+  {c:'住宿', n:'住宿旅館 — 旭川 (12/25)',                   done:true},
+  {c:'住宿', n:'住宿旅館 — 小樽 (12/26)',                   done:true},
+  {c:'住宿', n:'住宿旅館 — 洞爺 (12/27)',                   done:true},
+  {c:'住宿', n:'住宿旅館 — 函館 (12/28 ~ 12/30)',           done:true},
+  {c:'住宿', n:'住宿旅館 — 札幌 (12/31 ~ 01/02)',           done:true},
+  {c:'交通', n:'JR Hokkaido Rail Pass 7-Day',               done:false},
+  {c:'交通', n:'JR Hokkaido Rail 預約劃位',                 done:false},
+  {c:'交通', n:'JR Rent-A-Car 預約租車 (12/28)',            done:false},
+  {c:'交通', n:'駕照譯本',                                  done:false},
+  {c:'餐飲', n:'成吉思汗大黑屋 函館五稜郭店 預約訂位 (12/30)', done:false},
+  {c:'生活', n:'eSim',                                      done:false}
+];
+const dn = TASKS.filter(t=>t.done).length;
+document.getElementById('ppct').textContent = Math.round(dn/TASKS.length*100) + '%';
+document.getElementById('psub').textContent = dn + ' / ' + TASKS.length + ' 項完成';
+document.getElementById('tasks').innerHTML = TASKS.map(t=>`
+  <div class="task ${t.done?'done':'open'}">
+    <span class="mk">${t.done?'✓':''}</span>
+    <span class="tx">${t.n}<i>${t.c}</i></span>
+  </div>`).join('');
+</script>
+</body>
+</html>

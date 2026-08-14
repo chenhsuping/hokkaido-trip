@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>北海道小旅行 12/25 – 01/03</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="./image-slot.js"></script>
+<style>
+  :root{
+    --ink:#2b2721; --ink-2:#6a6055; --ink-3:#a99d8c;
+    --paper:#fffefb; --bg:#fff2dc; --line:rgba(43,39,33,.12);
+    --jr:#0e7ad4; --drive:#f4622e; --bus:#12a97a;
+    --jr-soft:#dcefff; --drive-soft:#ffe4d6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;
+       background-color:#fff4e2;
+       background-image:linear-gradient(180deg,#fff8ec 0%,#fff2dc 55%,#ffeed3 100%);
+       background-attachment:fixed;
+       -webkit-font-smoothing:antialiased}
+  a{color:var(--jr);text-decoration:none} a:hover{color:var(--ink)}
+  .cap{font-size:10px;letter-spacing:.26em;color:var(--drive);text-transform:uppercase;font-weight:500}
+
+  header{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;
+         padding:34px 40px 22px;max-width:1560px;margin:0 auto}
+  h1 em{font-style:normal;position:relative;z-index:1}
+  h1 em::after{content:"";position:absolute;left:-4px;right:-4px;bottom:2px;height:11px;z-index:-1;
+               background:rgba(244,98,46,.28);border-radius:6px}
+  h1{font-weight:700;font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-weight:700;font-size:34px;margin:8px 0 0;
+     letter-spacing:.12em;line-height:1.15}
+  .sub{font-size:12.5px;color:var(--ink-2);letter-spacing:.1em;margin-top:12px}
+  .sub b{font-weight:500;color:var(--ink)}
+  .legend{display:flex;gap:8px;font-size:11.5px;color:var(--ink-2);align-items:center}
+  .legend span{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;
+               background:var(--paper);border:1.5px solid var(--line);letter-spacing:.08em;font-weight:500}
+  .legend i{width:22px;height:0;border-top:2.5px solid var(--jr);border-radius:2px}
+  .legend i.drive{border-top-style:dashed;border-color:var(--drive)}
+
+  .top{display:grid;grid-template-columns:300px 1fr;gap:20px;padding:0 40px;
+       height:min(660px,72vh);max-width:1560px;margin:0 auto}
+
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:22px;
+         box-shadow:0 1px 1px rgba(23,34,43,.03),0 26px 46px -34px rgba(23,34,43,.5)}
+  .days{overflow-y:auto;overflow-x:hidden;padding:14px 12px}
+  .days::-webkit-scrollbar{width:5px}
+  .days::-webkit-scrollbar-thumb{background:#ddd5c7;border-radius:3px}
+  .day{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;
+       padding:12px 14px 12px 26px;cursor:pointer;border-radius:12px;transition:background .2s}
+  .day::before{content:"";position:absolute;left:12px;top:0;bottom:0;width:1px;background:var(--line)}
+  .day:first-child::before{top:50%} .day:last-child::before{bottom:50%}
+  .day::after{content:"";position:absolute;left:9.5px;top:50%;width:6px;height:6px;margin-top:-3px;
+              border-radius:50%;background:#d8d0c1;transition:.2s}
+  .day:hover{background:#f7f1e4}
+  .day.on{background:var(--jr-soft)}
+  .day.drive.on{background:var(--drive-soft)}
+  .day.on::after{background:var(--jr);box-shadow:0 0 0 3px rgba(14,122,212,.22)}
+  .day.drive.on::after{background:var(--drive);box-shadow:0 0 0 3px rgba(244,98,46,.26)}
+  .day .n{font-size:9.5px;color:var(--ink-3);letter-spacing:.24em}
+  .day .d{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-size:18px;font-weight:700;letter-spacing:.03em}
+  .day .w{font-size:11px;color:var(--ink-3);margin-left:5px}
+  .day .city{font-size:11.5px;color:var(--ink-2);margin-top:4px;letter-spacing:.03em}
+  .day .mode{width:52px;height:36px;display:grid;place-items:center;
+             background:none;color:var(--ink-3);opacity:.55;transition:.2s}
+  .day.on .mode{opacity:1}
+  .day:hover .mode{opacity:.85}
+
+  .mapwrap{position:relative;overflow:hidden;border-radius:22px;background:#e7e3d6;
+           box-shadow:0 1px 1px rgba(23,34,43,.05),0 30px 60px -38px rgba(11,19,26,.55)}
+  #map{width:100%;height:100%}
+  .leaflet-tile-pane{filter:grayscale(.62) sepia(.16) brightness(1.08) contrast(.9) saturate(.95)}
+  .leaflet-container{background:#dfe4dc;font-family:"Noto Sans TC",sans-serif}
+  .leaflet-control-attribution{font-size:9.5px;background:rgba(255,255,255,.72)}
+  .leaflet-bar a{border-radius:6px}
+  .mapfade{position:absolute;inset:0;z-index:480;pointer-events:none;background:#1b2530;
+           opacity:0;transition:opacity 1.1s ease}
+  .mapfade.on{opacity:.72}
+  .legnow{position:absolute;left:18px;top:18px;z-index:500;pointer-events:none;
+          background:rgba(255,253,251,.94);border:1px solid var(--line);border-radius:12px;
+          padding:10px 16px;max-width:min(420px,52%);box-shadow:0 14px 30px -22px rgba(36,31,26,.8)}
+  .legnow .cap{margin-bottom:5px}
+  .legnow .t{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-size:14px;letter-spacing:.04em;
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .maphint{position:absolute;left:18px;bottom:20px;z-index:500;pointer-events:none;
+           color:var(--ink-3);font-size:10px;letter-spacing:.12em;
+           background:rgba(255,253,251,.8);padding:4px 9px;border-radius:8px}
+
+  .pin{position:relative}
+  .pin .dot{position:absolute;left:-5.5px;top:-5.5px;width:11px;height:11px;border-radius:50%;
+            background:var(--jr);border:2px solid #fff;box-shadow:0 0 0 4px rgba(14,122,212,.2)}
+  .pin.drive .dot{background:var(--drive);box-shadow:0 0 0 4px rgba(244,98,46,.24)}
+  .pin.far .labels{left:56px}
+  .pin.far.flip .labels{left:auto;right:56px}
+  .pin .labels{position:absolute;left:12px;top:50%;transform:translateY(-50%);
+               display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+  .pin.flip .labels{left:auto;right:12px;align-items:flex-end}
+  .pin .labels b{font-weight:500;font-size:12px;border-radius:99px !important;letter-spacing:.03em;color:var(--ink);
+                 background:rgba(255,253,251,.92);border:1px solid var(--line);
+                 border-radius:7px;padding:3px 8px;
+                 box-shadow:0 6px 14px -10px rgba(23,34,43,.9)}
+  .pin .labels b i{font-style:normal;color:var(--jr);margin-right:6px;font-variant-numeric:tabular-nums}
+  .pin.drive .labels b i{color:var(--drive)}
+  .veh{width:80px;height:52px;margin:-26px 0 0 -40px;display:grid;place-items:center}
+  .veh .core{display:grid;place-items:center;transition:transform .5s cubic-bezier(.4,0,.2,1);
+             filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 2px rgba(255,255,255,.95))
+                    drop-shadow(0 3px 5px rgba(43,39,33,.35))}
+  .spotpop{position:absolute;left:16px;top:16px;width:180px;background:var(--paper);
+           border:1px solid var(--line);border-radius:14px;overflow:hidden;
+           box-shadow:0 18px 34px -22px rgba(43,39,33,.9);
+           animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both}
+  .spotpop.flip{left:auto;right:16px}
+  .spotpop .ph{width:100%;height:96px;background-size:cover;background-position:center}
+  .spotpop .tx{padding:9px 11px 11px;display:flex;flex-direction:column;gap:3px}
+  .spotpop b{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-size:12.5px;font-weight:700}
+  .spotpop span{font-size:10.5px;color:var(--ink-3);letter-spacing:.03em}
+  .spotpop.out{animation:popout .24s ease both}
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}
+  @keyframes popout{to{opacity:0;transform:translateY(-4px) scale(.97)}}
+  .pin .labels b.stay{background:#7a5cc4;color:#fff;border-color:#7a5cc4}
+  .pin .labels b.stay i{color:#e4dcfa}
+  .xfer{width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fdfaf4;
+        border:2px solid #5c5348;box-shadow:0 4px 10px -6px rgba(23,34,43,.8)}
+
+  .bottom{padding:34px 40px 60px;max-width:1560px;margin:0 auto}
+  .bhead{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;flex-wrap:wrap;
+         padding-bottom:14px;border-bottom:2px dashed rgba(43,39,33,.16)}
+  .bhead h2{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-size:20px;margin:0;font-weight:700;letter-spacing:.05em}
+  .bhead .meta{font-size:12px;color:var(--ink-3);letter-spacing:.05em}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:22px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+        display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s;
+        box-shadow:0 1px 1px rgba(23,34,43,.03),0 20px 34px -32px rgba(23,34,43,.6)}
+  .card:hover{transform:translateY(-3px)}
+  .card.active{border-color:var(--jr);box-shadow:0 0 0 2px var(--jr-soft),0 20px 34px -26px rgba(43,39,33,.6)}
+  .card.drive.active{border-color:var(--drive);box-shadow:0 0 0 2px var(--drive-soft),0 20px 34px -26px rgba(43,39,33,.6)}
+  .card .img{position:relative;width:100%;aspect-ratio:4/3;background:#f4ece0;
+             border-bottom:1px dashed rgba(43,39,33,.16)}
+  .card .body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:7px}
+  .card .tag{align-self:flex-start;font-size:11px;font-weight:500;letter-spacing:.08em;
+             color:#fff;background:var(--jr);border-radius:99px;padding:3px 11px}
+  .card.drive .tag{background:var(--drive)}
+  .card .tag.stayc{background:#7a5cc4}
+  .card h3{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-size:16.5px;margin:0;font-weight:700;letter-spacing:.03em}
+  .kana{font-size:10.5px;color:var(--ink-3);letter-spacing:.1em}
+  .card .credit{font-size:10px;color:var(--ink-3);letter-spacing:.04em;margin-top:2px}
+  .card .credit a{color:var(--ink-3);text-decoration:underline}
+  .card .credit a:hover{color:var(--jr)}
+  .card p{margin:4px 0 0;font-size:12.5px;line-height:1.85;color:var(--ink-2);text-wrap:pretty}
+  @media (max-width:1080px){
+    header{padding:26px 24px 16px}
+    h1{font-size:28px}
+    .top{grid-template-columns:250px 1fr;gap:14px;padding:0 24px;height:min(560px,66vh)}
+    .bottom{padding:26px 24px 48px}
+  }
+  @media (max-width:820px){
+    header{flex-direction:column;align-items:flex-start;gap:14px;padding:22px 18px 14px}
+    h1{font-size:25px;letter-spacing:.08em}
+    .sub{font-size:11.5px;margin-top:9px}
+    .legend{gap:8px;flex-wrap:wrap}
+    .top{display:flex;flex-direction:column;gap:12px;padding:0 18px;height:auto}
+    .days{display:flex;flex-direction:row;gap:8px;overflow-x:auto;overflow-y:hidden;
+          padding:10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+    .days::-webkit-scrollbar{height:5px}
+    .day{flex:0 0 auto;min-width:132px;grid-template-columns:1fr;justify-items:flex-start;
+         padding:10px 14px;scroll-snap-align:start}
+    .day::before,.day::after{display:none}
+    .day .mode{width:44px;height:28px;margin-top:6px}
+    .mapwrap{height:52vh;min-height:320px}
+    .legnow{left:12px;top:12px;padding:8px 12px;max-width:min(320px,66%);border-radius:10px}
+    .legnow .t{font-size:12.5px}
+    .maphint{display:none}
+    .pin .labels b{font-size:11px;padding:2px 7px}
+    .bottom{padding:22px 18px 44px}
+    .bhead h2{font-size:17px}
+    .cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  }
+  @media (max-width:560px){
+    h1{font-size:23px}
+    .sub{letter-spacing:.06em}
+    .mapwrap{height:46vh;min-height:280px}
+    .veh{transform:scale(.8)}
+    .cards{grid-template-columns:1fr;gap:14px}
+    .card .img{aspect-ratio:16/10}
+    .card .body{padding:14px 15px 17px}
+    .bhead{gap:8px}
+    .bhead .meta{font-size:11.5px}
+  }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#0e7ad4"/>
+  <circle cx="100" cy="86" r="34" fill="#fff8ec"/>
+  <rect x="66" y="120" width="68" height="10" rx="5" fill="#fff8ec" opacity=".85"/>
+  <rect x="80" y="140" width="40" height="10" rx="5" fill="#f4622e"/>
+</svg>
+</template>
+<header>
+  <div>
+    <div class="cap">Hokkaido · Winter Itinerary</div>
+    <h1><em>北海道</em>小旅行</h1>
+    <div class="sub"><b>2025.12.25 — 12.31</b>　旭川 · 小樽 · 洞爺 · 函館 · 札幌（01/01–01/03 待規劃）</div>
+  </div>
+  <div class="legend">
+    <span><i></i>JR 鐵路</span>
+    <span><i class="drive"></i>租車自駕</span>
+    <span><i style="width:10px;height:10px;border:0;border-radius:4px;background:#7a5cc4"></i>當晚住宿</span>
+  </div>
+</header>
+
+<div class="top">
+  <div class="panel days" id="days"></div>
+  <div class="mapwrap">
+    <div id="map"></div>
+    <div class="legnow"><div class="cap" id="legday">Day 1</div><div class="t" id="legtext"></div></div>
+    <div class="mapfade" id="mapfade"></div>
+    <div class="maphint">點選左側日期 · 圖示依當日路線（含轉車）移動</div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="bhead"><h2 id="btitle"></h2><div class="meta" id="bmeta"></div></div>
+  <div class="cards" id="cards"></div>
+</div>
+
+<script>
+const P = {
+  chitose:[141.6920,42.7750], sapporo:[141.3507,43.0686], asahikawa:[142.36473,43.76075],
+  hotelAsahikawa:[142.36170,43.75940], heiwa:[142.36280,43.76860], hachiya:[142.36400,43.77000],
+  busTerm:[142.36520,43.76040], zoo:[142.47978,43.76803],
+  otaru:[140.99386,43.19756], nord:[141.00060,43.19840], sankaku:[140.99320,43.19770],
+  toyaStn:[140.77630,42.56610], toyaHotel:[140.81778,42.56417],
+  showa:[140.86444,42.54250], yunokawaZoo:[140.79480,41.78030], yukura:[140.79100,41.78211],
+  hakodateStn:[140.72640,41.77370], jujigai:[140.71632,41.76496], kanemori:[140.71645,41.76618],
+  komeda:[140.7180,41.7690], hachiman:[140.7110,41.7620], yamazaki:[140.7150,41.7640],
+  ropeway:[140.7080,41.7590], gotoken:[140.7160,41.7640],
+  goryokaku:[140.75696,41.79690], daikokuya:[140.75980,41.79600], asaichi:[140.72538,41.77256],
+  susukino:[141.3540,43.0540], odori:[140.0,0], tokeidai:[141.35361,43.06250],
+  akarenga:[141.34800,43.06394], ichiryuan:[141.35600,43.06800]
+};
+P.odori = [141.35643,43.06109];
+
+const DAYS = [
+  { d:"12/25", w:"四", city:"新千歲 → 旭川", note:"11:30 抵達新千歲，札幌轉車，15:00 到旭川",
+    legs:[
+      {from:P.chitose, to:P.sapporo, mode:"jr", label:"Rapid Airport ／ 新千歲空港 → JR 札幌站　40 min"},
+      {from:P.sapporo, to:P.asahikawa, mode:"jr", label:"轉車 · JR 特急 Kamui / Lilac ／ 札幌 → 旭川　90 min"},
+      {from:P.asahikawa, to:P.hotelAsahikawa, mode:"walk", label:"步行 2 min ／ 旭川 JR 酒店 Check-in"},
+      {from:P.hotelAsahikawa, to:P.heiwa, mode:"walk", label:"步行 10 min ／ 平和通商店街"},
+      {from:P.heiwa, to:P.hachiya, mode:"walk", label:"步行 5 min ／ 蜂屋 五条創業店"},
+      {from:P.hachiya, to:P.hotelAsahikawa, mode:"walk", label:"步行 ／ 返回 旭川 JR 酒店"}
+    ],
+    spots:[
+      {n:"新千歲空港", time:"11:30", act:"抵達北海道", p:P.chitose,
+       d:"台灣虎航 IT234 抵達，出關後搭 Rapid Airport 進札幌，於 JR 札幌站轉特急北上旭川。"},
+      {n:"旭川 JR 酒店", time:"15:00", act:"飯店 Check-in、寄放行李", p:P.hotelAsahikawa, stay:true,
+       d:"JR 旭川站旁的飯店，出站步行 2 分鐘，先寄放行李再出門逛商店街。"},
+      {n:"平和通商店街", time:"15:30", act:"走走逛逛", p:P.heiwa,
+       d:"從旭川 JR 酒店步行 10 分鐘，日本第一條行人徒步商店街，冬天兩側積雪、燈飾亮起。"},
+      {n:"蜂屋 五条創業店", time:"18:00", act:"醬油拉麵 晚餐", p:P.hachiya,
+       d:"旭川拉麵的創業老店，焦香豬油的醬油湯頭配捲麵，離商店街步行 5 分鐘。"}
+    ]},
+  { d:"12/26", w:"五", city:"旭川 → 小樽", note:"上午旭山動物園，15:30 出發，經札幌轉車到小樽",
+    legs:[
+      {from:P.hotelAsahikawa, to:P.busTerm, mode:"walk", label:"步行 5 min ／ 旭川巴士總站 6 號月台"},
+      {from:P.busTerm, to:P.zoo, mode:"bus", label:"41 號巴士 ／ 巴士總站 → 旭山動物園　50 min"},
+      {from:P.zoo, to:P.asahikawa, mode:"bus", label:"41 號巴士 ／ 動物園 → JR 旭川站　40 min"},
+      {from:P.asahikawa, to:P.sapporo, mode:"jr", label:"JR 特急 Kamui / Lilac ／ 旭川 → 札幌　90 min"},
+      {from:P.sapporo, to:P.otaru, mode:"jr", label:"轉車 · 函館本線快速 ／ 札幌 → 小樽　40 min"},
+      {from:P.otaru, to:P.nord, mode:"walk", label:"步行 10 min ／ Nord 小樽飯店 Check-in"}
+    ],
+    spots:[
+      {n:"旭山動物園", time:"09:30", act:"企鵝走路、北極熊、海豹", p:P.zoo,
+       d:"09:30 入園待到 14:30。冬季限定的企鵝散步、北極熊與北極狼、北極狐都在同一動線上。"},
+      {n:"Nord 小樽飯店", time:"18:10", act:"Check-in、晚餐", p:P.nord,
+       d:"18:00 抵達小樽，飯店在運河附近步行 10 分鐘；晚餐尚未指定。"}
+    ]},
+  { d:"12/27", w:"六", city:"小樽 → 洞爺", note:"三角市場午餐，13:00 出發，經札幌轉特急北斗到洞爺",
+    legs:[
+      {from:P.nord, to:P.sankaku, mode:"walk", label:"步行 10 min ／ 三角市場"},
+      {from:P.sankaku, to:P.otaru, mode:"walk", label:"步行 ／ JR 小樽站"},
+      {from:P.otaru, to:P.sapporo, mode:"jr", label:"函館本線快速 ／ 小樽 → 札幌　40 min"},
+      {from:P.sapporo, to:P.toyaStn, mode:"jr", label:"轉車 · JR 特急 Hokuto ／ 札幌 → 洞爺　110 min"},
+      {from:P.toyaStn, to:P.toyaHotel, mode:"bus", label:"飯店接駁車 15 min ／ 洞爺觀光酒店"}
+    ],
+    spots:[
+      {n:"三角市場", time:"11:00", act:"走走逛逛、午餐", p:P.sankaku,
+       d:"小樽站旁的斜坡小市場，現剖海膽鮭魚卵丼當午餐，逛完直接回站搭車。"},
+      {n:"洞爺觀光酒店", time:"16:00", act:"Check-in、溫泉", p:P.toyaHotel,
+       d:"15:40 抵達 JR 洞爺站後搭飯店接駁車 15 分鐘，湖畔溫泉街，晚上可泡面湖的大浴場。"}
+    ]},
+  { d:"12/28", w:"日", city:"洞爺 → 函館（自駕）", note:"09:00 取車自駕，昭和新山 → 湯之川，17:00 函館站還車",
+    legs:[
+      {from:P.toyaHotel, to:P.toyaStn, mode:"bus", label:"飯店接駁車 15 min ／ JR Rent-A-Car Toya 取車"},
+      {from:P.toyaStn, to:P.showa, mode:"drive", label:"開車 15 min ／ 昭和新山熊牧場"},
+      {from:P.showa, to:P.yunokawaZoo, mode:"drive", label:"開車 150 min ／ 湯之川 熱帶動植物園"},
+      {from:P.yunokawaZoo, to:P.yukura, mode:"drive", label:"開車 5 min ／ 湯倉神社"},
+      {from:P.yukura, to:P.hakodateStn, mode:"drive", label:"開車 15 min ／ 函館站營業所 還車"},
+      {from:P.hakodateStn, to:P.jujigai, mode:"bus", label:"市電 十字街站 15 min ／ 民宿 Check-in"},
+      {from:P.jujigai, to:P.kanemori, mode:"walk", label:"步行 10 min ／ 金森紅磚倉庫 晚餐"},
+      {from:P.kanemori, to:P.jujigai, mode:"walk", label:"步行 10 min ／ 返回 民宿"}
+    ],
+    spots:[
+      {n:"昭和新山熊牧場", time:"10:00", act:"熊牧場", p:P.showa,
+       d:"取車後開車 15 分鐘抵達，仍在冒煙的紅褐色火山體就在牧場旁。"},
+      {n:"湯之川 熱帶動植物園", time:"14:00", act:"偷看猴子泡溫泉", p:P.yunokawaZoo,
+       d:"從昭和新山沿海岸線開約 2.5 小時；園內的猴子溫泉是冬季限定畫面。"},
+      {n:"湯倉神社", time:"16:30", act:"走走逛逛", p:P.yukura,
+       d:"湯之川溫泉的守護神社，距植物園開車 5 分鐘，之後回函館站還車。"},
+      {n:"Condominium View Mt Hakodate", time:"18:30", act:"民宿 Check-in", p:P.jujigai, stay:true,
+       d:"還車後搭市電到十字街站，民宿位在元町坡道下方，走去灣區與函館山都方便。"},
+      {n:"金森紅磚倉庫", time:"19:00", act:"Lucky Pierrot 晚餐", p:P.kanemori,
+       d:"民宿在十字街，步行 10 分鐘到灣區；晚餐是 Lucky Pierrot Marina 末廣店的小丑漢堡。"}
+    ]},
+  { d:"12/29", w:"一", city:"函館", note:"元町、八幡坂散步，傍晚函館山纜車看夜景",
+    legs:[
+      {from:P.jujigai, to:P.komeda, mode:"walk", label:"步行 10 min ／ 客美多咖啡 函館港濱店"},
+      {from:P.komeda, to:P.hachiman, mode:"walk", label:"步行 20 min ／ 元町 → 八幡坂"},
+      {from:P.hachiman, to:P.yamazaki, mode:"walk", label:"步行 5 min ／ 山崎洋服店"},
+      {from:P.yamazaki, to:P.ropeway, mode:"walk", label:"步行 10 min ／ 函館山纜車"},
+      {from:P.ropeway, to:P.gotoken, mode:"walk", label:"步行 10 min ／ 五島軒 雪河亭"},
+      {from:P.gotoken, to:P.jujigai, mode:"walk", label:"步行 ／ 返回 民宿"}
+    ],
+    spots:[
+      {n:"客美多咖啡 函館港濱店", time:"08:00", act:"早餐", p:P.komeda,
+       d:"從民宿步行 10 分鐘，名古屋系咖啡店的早餐配吐司，先暖身再上坡。"},
+      {n:"八幡坂", time:"10:00", act:"元町散步", p:P.hachiman,
+       d:"從民宿往函館山方向，先走元町再到八幡坂；正對港口的筆直下坡是經典畫面。"},
+      {n:"山崎洋服店", time:"12:00", act:"鹽味拉麵 午餐", p:P.yamazaki,
+       d:"洋服店招牌下的老拉麵店，函館鹽味拉麵清澈湯頭，離八幡坂步行 5 分鐘。"},
+      {n:"函館山纜車", time:"15:30", act:"日落、夜景", p:P.ropeway,
+       d:"冬季登山道封閉，改搭纜車。建議日落前 30 分鐘上山卡位，山頂風大。"},
+      {n:"五島軒 雪河亭", time:"18:00", act:"法式咖哩 晚餐", p:P.gotoken,
+       d:"明治創業的老洋食館：法國風咖哩、蛋包飯、招牌燉牛肉與蟹肉奶油可樂餅。"}
+    ]},
+  { d:"12/30", w:"二", city:"函館", note:"五稜郭公園，午餐成吉思汗大黑屋（已訂位）",
+    legs:[
+      {from:P.jujigai, to:P.goryokaku, mode:"bus", label:"市電 45 min ／ 五稜郭公園前站"},
+      {from:P.goryokaku, to:P.daikokuya, mode:"walk", label:"步行 15 min ／ 成吉思汗大黑屋 五稜郭店"},
+      {from:P.daikokuya, to:P.jujigai, mode:"bus", label:"市電 ／ 返回十字街 民宿"}
+    ],
+    spots:[
+      {n:"五稜郭公園", time:"09:00", act:"走走逛逛", p:P.goryokaku,
+       d:"搭市電到五稜郭公園前站再走一段，積雪後的星形城郭輪廓最清楚。"},
+      {n:"成吉思汗大黑屋 五稜郭店", time:"12:00", act:"烤羊肉 午餐（已訂位）", p:P.daikokuya,
+       d:"已預約訂位。生羊肩肉配特製醬汁，鐵鍋中央隆起讓油脂流到周圍蔬菜。"}
+    ]},
+  { d:"12/31", w:"三", city:"函館 → 札幌", note:"函館朝市後搭特急北斗北上，傍晚札幌市區散步跨年",
+    legs:[
+      {from:P.jujigai, to:P.asaichi, mode:"bus", label:"市電 15 min ／ 函館站前站 · 函館朝市"},
+      {from:P.asaichi, to:P.hakodateStn, mode:"walk", label:"步行 5 min ／ JR 函館站"},
+      {from:P.hakodateStn, to:P.sapporo, mode:"jr", label:"JR 特急北斗 ／ 函館 → 札幌　240 min"},
+      {from:P.sapporo, to:P.susukino, mode:"jr", label:"地下鐵東豐線 10 min ／ 豐水薄野站 民宿"},
+      {from:P.susukino, to:P.odori, mode:"jr", label:"市電 15 min ／ 大通公園 · 札幌電視塔"},
+      {from:P.odori, to:P.tokeidai, mode:"walk", label:"步行 5 min ／ 札幌時計台"},
+      {from:P.tokeidai, to:P.akarenga, mode:"walk", label:"步行 10 min ／ 北海道廳舊本廳舍"},
+      {from:P.akarenga, to:P.ichiryuan, mode:"walk", label:"步行 15 min ／ 札幌一粒庵"},
+      {from:P.ichiryuan, to:P.susukino, mode:"jr", label:"地下鐵 ／ 返回 薄野 民宿"}
+    ],
+    spots:[
+      {n:"函館朝市", time:"10:00", act:"走走逛逛", p:P.asaichi,
+       d:"搭市電到函館站前站，釣烏賊與海鮮丼，逛完步行 5 分鐘就是 JR 函館站。"},
+      {n:"薄野 民宿 IK1003", time:"16:40", act:"民宿 Check-in、放行李", p:P.susukino, stay:true,
+       d:"搭市營地下鐵東豐線到豐水薄野站，放好行李再出門走大通與時計台。"},
+      {n:"大通公園 · 札幌電視塔", time:"17:00", act:"走走逛逛", p:P.odori,
+       d:"16:40 民宿放行李後出門，白色燈樹節的燈飾與電視塔同框。"},
+      {n:"札幌時計台", time:"17:10", act:"走走逛逛", p:P.tokeidai,
+       d:"距大通公園步行 5 分鐘，夜間打燈的木造鐘樓。"},
+      {n:"北海道廳舊本廳舍", time:"17:30", act:"走走逛逛", p:P.akarenga,
+       d:"紅磚廳舍與前庭水池，步行 10 分鐘可達。"},
+      {n:"札幌一粒庵", time:"18:00", act:"味噌拉麵 晚餐", p:P.ichiryuan,
+       d:"札幌站附近的味噌拉麵名店，元氣味噌拉麵配溫泉蛋，跨年夜前的最後一餐。"}
+    ]}
+];
+const WIKI = {
+ "新千歲空港":["新千歲機場"], "平和通商店街":["平和通買物公園","旭川市"], "蜂屋 五条創業店":["旭川拉麵"],
+ "旭山動物園":["旭川市旭山動物園"], "Nord 小樽飯店":["小樽運河"],
+ "三角市場":["小樽市"], "洞爺觀光酒店":["洞爺湖"],
+ "昭和新山熊牧場":["昭和新山"], "湯之川 熱帶動植物園":["函館市熱帯植物園"], "湯倉神社":["湯倉神社"],
+ "金森紅磚倉庫":["金森紅磚倉庫","函館市"],
+ "客美多咖啡 函館港濱店":["函館港"], "八幡坂":["元町 (函館市)"], "山崎洋服店":["函館拉麵","函館市"],
+ "函館山纜車":["函館山"], "五島軒 雪河亭":["五島軒","函館市"],
+ "五稜郭公園":["五稜郭"], "成吉思汗大黑屋 五稜郭店":["成吉思汗烤肉"],
+ "函館朝市":["函館朝市"], "大通公園 · 札幌電視塔":["札幌電視塔"], "札幌時計台":["札幌市時計台"],
+ "北海道廳舊本廳舍":["北海道廳舊本廳舍"], "札幌一粒庵":["札幌拉麵"]
+};
+const STAY = {};
+DAYS.forEach(d=>{ d.stay = STAY[d.d] || null; });
+const LEG_SPOT = {
+  "12/25":{2:"旭川 JR 酒店", 3:"平和通商店街", 4:"蜂屋 五条創業店"},
+  "12/26":{1:"旭山動物園", 5:"Nord 小樽飯店"},
+  "12/27":{0:"三角市場", 4:"洞爺觀光酒店"},
+  "12/28":{1:"昭和新山熊牧場", 2:"湯之川 熱帶動植物園", 3:"湯倉神社", 5:"Condominium View Mt Hakodate", 6:"金森紅磚倉庫"},
+  "12/29":{0:"客美多咖啡 函館港濱店", 1:"八幡坂", 2:"山崎洋服店", 3:"函館山纜車", 4:"五島軒 雪河亭"},
+  "12/30":{0:"五稜郭公園", 1:"成吉思汗大黑屋 五稜郭店"},
+  "12/31":{0:"函館朝市", 3:"薄野 民宿 IK1003", 4:"大通公園 · 札幌電視塔", 5:"札幌時計台", 6:"北海道廳舊本廳舍", 7:"札幌一粒庵"}
+};
+DAYS.forEach(d=>{
+  const m = LEG_SPOT[d.d] || {};
+  d.legs.forEach((l,i)=>{
+    const name = m[i];
+    if(!name) return;
+    const s = d.spots.find(s=>s.n===name);
+    if(s){ l.spot = name; l.to = s.p; }          // 終點對齊該景點，圖示正好停在標註上
+  });
+  d.legs.forEach((l,i)=>{ if(i>0) l.from = d.legs[i-1].to; });   // 串接：起點＝前一段終點
+});
+DAYS.forEach(d=>{ d.mode = d.legs.some(l=>l.mode==="drive") ? "drive" : "jr"; });
+
+const COL = { jr:"#0e7ad4", drive:"#f4622e", bus:"#12a97a", walk:"#f0ad2a", tram:"#f0ad2a" };
+DAYS.forEach(d=>d.legs.forEach(l=>{ if(l.label.indexOf("市電")>=0) l.mode = "tram"; }));
+
+const INK = '#2b2721';
+function wide(s,inner){ return `<svg width="${s*1.55}" height="${s}" viewBox="0 0 44 24" fill="none">${inner}</svg>`; }
+function trainIcon(s,c){ const D='#22414d', T='#6ecfc8'; return wide(s,
+  `<circle cx="8.6" cy="17.6" r="1.7" fill="${D}"/><circle cx="12" cy="17.6" r="1.7" fill="${D}"/>
+    <circle cx="15.4" cy="17.6" r="1.7" fill="${D}"/><circle cx="27.4" cy="17.6" r="1.7" fill="${D}"/>
+    <circle cx="30.8" cy="17.6" r="1.7" fill="${D}"/><circle cx="34.2" cy="17.6" r="1.7" fill="${D}"/>
+    <path d="M3.2 9.2c0-1.5 1.1-2.6 2.6-2.6h20.6c5.2 0 9.9 1.4 14 4.4 1.4 1 2 1.9 2 2.9 0 1.5-1.2 2.5-3 2.5H5.6c-1.5 0-2.4-1-2.4-2.4z" fill="#fff" stroke="${D}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M6.6 8.8h21.6v4.6H6.6z" fill="${D}"/>
+    <rect x="13.2" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
+    <rect x="16.8" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
+    <rect x="20.4" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
+    <rect x="24" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
+    <rect x="8.2" y="8.4" width="3" height="5.4" rx=".8" fill="${T}"/>
+    <rect x="28.6" y="8.4" width="3" height="5.4" rx=".8" fill="${T}"/>
+    <path d="M33.4 9.6c2.4.8 4.4 1.9 6.2 3.2v.8h-6.2z" fill="${T}" stroke="${D}" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M4.4 14.2h36.4c.5.6.8 1.1.8 1.6 0 .3-.1.5-.2.8H4.6c-.2-.4-.2-.8-.2-1.2z" fill="${T}"/>
+    <path d="M3.2 14.2h38.6" stroke="${D}" stroke-width="1.1"/>`); }
+function carIcon(s,c){ const D='#23262b', G='#8d939a'; return wide(s,
+  `<path d="M3 16.4c0-1.4.6-2.5 1.9-2.9l4.6-1.3 5.1-3.6c1.2-.9 2.5-1.3 4-1.3h7.9c1.7 0 3.2.5 4.4 1.6l3.2 2.8 4.3 1.1c1.3.3 2 1.2 2 2.5v1.5c0 1-.6 1.6-1.7 1.6H4.7c-1.1 0-1.7-.6-1.7-1.6z" fill="#fff" stroke="${D}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M15.6 12.1l3.8-2.7c.6-.4 1.2-.6 1.9-.6h1.1v3.3z" fill="${D}"/>
+    <path d="M23.9 8.8h3.9c1 0 1.9.3 2.6 1l2.5 2.3h-9z" fill="${D}"/>
+    <path d="M23.4 12.6v5.2" stroke="${D}" stroke-width="1"/>
+    <rect x="18.6" y="13.4" width="2.8" height="1" rx=".5" fill="${G}"/>
+    <rect x="25.4" y="13.4" width="2.8" height="1" rx=".5" fill="${G}"/>
+    <rect x="38.2" y="13.2" width="2.8" height="1.8" rx=".7" fill="#fff" stroke="${D}" stroke-width=".9"/>
+    <rect x="3.6" y="13.2" width="2.4" height="1.8" rx=".7" fill="#e04b3c"/>
+    <circle cx="12.8" cy="17.2" r="4" fill="${D}"/><circle cx="12.8" cy="17.2" r="2.2" fill="${G}"/>
+    <circle cx="12.8" cy="17.2" r=".8" fill="#fff"/>
+    <circle cx="31.4" cy="17.2" r="4" fill="${D}"/><circle cx="31.4" cy="17.2" r="2.2" fill="${G}"/>
+    <circle cx="31.4" cy="17.2" r=".8" fill="#fff"/>`); }
+function busIcon(s,c){ c = c || '#12a97a'; s = s*0.72; return wide(s,
+  `<rect x="4" y="5.6" width="35" height="13.6" rx="4.4" fill="#fff" stroke="${INK}" stroke-width="1.3"/>
+    <path d="M6.4 8.8h13.2v4.4H6.4zM21.8 8.8h9.4v4.4h-9.4z" fill="${INK}" opacity=".8"/>
+    <rect x="33.4" y="9" width="3.4" height="4" rx="1.2" fill="${c}"/>
+    <rect x="4" y="15.4" width="35" height="1.6" fill="${c}" opacity=".85"/>
+    <circle cx="12.6" cy="19.6" r="3.2" fill="${INK}"/><circle cx="12.6" cy="19.6" r="1.3" fill="#fff"/>
+    <circle cx="30.6" cy="19.6" r="3.2" fill="${INK}"/><circle cx="30.6" cy="19.6" r="1.3" fill="#fff"/>`); }
+function walkIcon(s,c){ c = c || INK; s = s*0.62; return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${c}">
+    <ellipse cx="8.4" cy="16.2" rx="3.3" ry="4.7" transform="rotate(-10 8.4 16.2)"/>
+    <circle cx="5.4" cy="10.4" r="1.25"/><circle cx="8.2" cy="9.5" r="1.35"/>
+    <circle cx="11" cy="9.9" r="1.15"/><circle cx="13" cy="11.4" r=".95"/>
+    <ellipse cx="16.6" cy="11.6" rx="2.9" ry="4.2" transform="rotate(-10 16.6 11.6)"/>
+    <circle cx="13.9" cy="6.3" r="1.1"/><circle cx="16.5" cy="5.5" r="1.2"/>
+    <circle cx="19" cy="5.9" r="1"/><circle cx="20.8" cy="7.2" r=".85"/>
+  </svg>`; }
+const ICON = { jr:trainIcon, drive:carIcon, bus:busIcon, walk:walkIcon, tram:walkIcon };
+
+/* ---------- Leaflet base map ---------- */
+const map = L.map('map', { zoomControl:false, scrollWheelZoom:true, zoomSnap:.25 })
+  .setView([43.2,142.4], 7);
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18, attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+const layers = { base:L.layerGroup().addTo(map), past:L.layerGroup().addTo(map),
+                 route:L.layerGroup().addTo(map), veh:L.layerGroup().addTo(map),
+                 pins:L.layerGroup().addTo(map), card:L.layerGroup().addTo(map) };
+const LL = p => L.latLng(p[1], p[0]);
+
+/* 沿實際路線的中途點（車站／國道經過點） */
+const VIA = {
+  "chitose>sapporo":[[141.6528,42.7920],[141.6503,42.7965],[141.6220,42.8280],[141.5786,42.8825],[141.5620,42.9350],[141.5622,42.9856],[141.5100,43.0080],[141.4726,43.0357],[141.4300,43.0430],[141.4020,43.0490],[141.3760,43.0640]],
+  "sapporo>asahikawa":[[141.4020,43.0490],[141.5350,43.1030],[141.7758,43.1962],[141.8300,43.2700],[141.8544,43.3319],[141.8830,43.4160],[141.9057,43.4944],[141.9099,43.5556],[141.9200,43.6250],[141.9800,43.6900],[142.0505,43.7237],[142.1400,43.7350],[142.2500,43.7700],[142.3300,43.7700]],
+  "sapporo>otaru":[[141.3350,43.0730],[141.3080,43.0850],[141.2800,43.0980],[141.2410,43.1160],[141.2000,43.1300],[141.1700,43.1400],[141.1360,43.1500],[141.0480,43.1930],[141.0090,43.1900]],
+  "sapporo>toyaStn":[[141.4020,43.0490],[141.4726,43.0357],[141.5622,42.9856],[141.5786,42.8825],[141.6503,42.7965],[141.6528,42.7920],[141.6900,42.7100],[141.7150,42.6600],[141.6910,42.6386],[141.5500,42.5900],[141.3550,42.5500],[141.1290,42.4630],[141.0700,42.4200],[141.0230,42.3400],[140.8660,42.4720],[140.8200,42.5100]],
+  "hakodateStn>sapporo":[[140.7420,41.8080],[140.7150,41.8400],[140.6880,41.8850],[140.6720,41.9760],[140.5750,42.1050],[140.4900,42.1600],[140.2680,42.2560],[140.2900,42.3300],[140.3760,42.5120],[140.4700,42.5400],[140.5900,42.5400],[140.7000,42.5600],[140.7794,42.5667],[140.8200,42.5100],[140.8660,42.4720],[141.0230,42.3400],[141.0700,42.4200],[141.1290,42.4630],[141.3550,42.5500],[141.5500,42.5900],[141.6910,42.6386],[141.7150,42.6600],[141.6528,42.7920],[141.5786,42.8825],[141.5622,42.9856],[141.4726,43.0357],[141.4020,43.0490]],
+  "toyaStn>showa":[[140.7830,42.5590],[140.8330,42.5540],[140.8500,42.5480]],
+  "showa>yunokawaZoo":[[140.8500,42.5560],[140.7830,42.5590],[140.7500,42.5700],[140.7000,42.5600],[140.5900,42.5400],[140.4700,42.5400],[140.3760,42.5120],[140.2700,42.3900],[140.2680,42.2560],[140.4300,42.1700],[140.5750,42.1050],[140.6720,41.9760],[140.6880,41.8850],[140.7150,41.8400],[140.7263,41.7737]],
+  "busTerm>zoo":[[142.3900,43.7580],[142.4200,43.7620],[142.4600,43.7660]],
+  "zoo>asahikawa":[[142.4600,43.7660],[142.4200,43.7620],[142.3900,43.7580]],
+  "jujigai>goryokaku":[[140.7263,41.7737],[140.7420,41.8080],[140.7500,41.7990]],
+  "daikokuya>jujigai":[[140.7500,41.7990],[140.7420,41.8080],[140.7263,41.7737]],
+  "jujigai>asaichi":[[140.7200,41.7700]],
+  "sapporo>susukino":[[141.3540,43.0620],[141.3545,43.0570]],
+  "susukino>odori":[[141.3545,43.0580]],
+  "hakodateStn>jujigai":[[140.7230,41.7700]],
+  "toyaStn>toyaHotel":[[140.7810,42.5620]],
+  "toyaHotel>toyaStn":[[140.7810,42.5620]],
+  "yukura>hakodateStn":[[140.7700,41.7790],[140.7400,41.7760]],
+  "yunokawaZoo>yukura":[[140.7880,41.7825]]
+};
+const KEY = new Map();
+Object.entries(P).forEach(([k,v])=>KEY.set(v[0]+','+v[1], k));
+function viaFor(a,b){
+  const k = KEY.get(a[0]+','+a[1]) + '>' + KEY.get(b[0]+','+b[1]);
+  return VIA[k] || null;
+}
+/* Catmull-Rom 平滑：讓折線貼近實際路線又不生硬 */
+function smooth(list){
+  const pts = list.map(p=>L.latLng(p[1],p[0]));
+  if(pts.length===2){
+    const out=[]; for(let i=0;i<=24;i++){const t=i/24;
+      out.push(L.latLng(pts[0].lat+(pts[1].lat-pts[0].lat)*t, pts[0].lng+(pts[1].lng-pts[0].lng)*t));}
+    return out;
+  }
+  const P4 = [pts[0], ...pts, pts[pts.length-1]], out=[];
+  for(let i=1;i<P4.length-2;i++){
+    const p0=P4[i-1],p1=P4[i],p2=P4[i+1],p3=P4[i+2];
+    for(let j=0;j<16;j++){ const t=j/16, t2=t*t, t3=t2*t;
+      out.push(L.latLng(
+        .5*((2*p1.lat)+(-p0.lat+p2.lat)*t+(2*p0.lat-5*p1.lat+4*p2.lat-p3.lat)*t2+(-p0.lat+3*p1.lat-3*p2.lat+p3.lat)*t3),
+        .5*((2*p1.lng)+(-p0.lng+p2.lng)*t+(2*p0.lng-5*p1.lng+4*p2.lng-p3.lng)*t2+(-p0.lng+3*p1.lng-3*p2.lng+p3.lng)*t3)));
+    }
+  }
+  out.push(pts[pts.length-1]);
+  return out;
+}
+function curvePts(a,b){ return smooth([a, ...(viaFor(a,b)||[]), b]); }
+
+const roadCache = new Map();
+let active = 0; const queue = [];
+function slot(){
+  return new Promise(res=>{ const run=()=>{active++;res(()=>{active--; const n=queue.shift(); if(n) n();});};
+    if(active<3) run(); else queue.push(run); });
+}
+async function roadPath(leg){
+  if(leg.mode === 'jr') return null;
+  const via = viaFor(leg.from, leg.to) || [];
+  const coords = [leg.from, ...via, leg.to].map(p=>p[0].toFixed(5)+','+p[1].toFixed(5)).join(';');
+  const profile = leg.mode === 'walk' ? 'foot' : 'driving';
+  const key = profile+':'+coords;
+  if(roadCache.has(key)) return roadCache.get(key);
+  const release = await slot();
+  try{
+    const r = await fetch('https://router.project-osrm.org/route/v1/'+profile+'/'+coords+'?overview=full&geometries=geojson');
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    const line = j.routes && j.routes[0] && j.routes[0].geometry.coordinates.map(c=>L.latLng(c[1],c[0]));
+    if(!line || line.length < 2) throw 0;
+    roadCache.set(key, line);
+    return line;
+  }catch(e){ roadCache.set(key, null); return null; }
+  finally{ release(); }
+}
+
+let cur = 0, token = 0, raf = null, vehMarker = null, lastPan = 0, autoPlay = true, autoTimer = null;
+
+function fadeIn(){ const f=document.getElementById('mapfade'); if(f) f.classList.remove('on'); }
+function fadeOut(){ return new Promise(res=>{ const f=document.getElementById('mapfade');
+  if(!f) return res(); f.classList.add('on'); setTimeout(res, 1150); }); }
+
+function render(i, animate){
+  const day = DAYS[i]; const my = ++token;
+  if(raf) cancelAnimationFrame(raf);
+  ['past','route','veh','pins','card'].forEach(k=>layers[k].clearLayers());
+
+  DAYS.slice(0,i).forEach(dd=>dd.legs.forEach(l=>{
+    const pl = L.polyline(curvePts(l.from,l.to), {color:'#bdae99',weight:1.6,opacity:.55,dashArray:'2 6'})
+      .addTo(layers.past);
+    roadPath(l).then(real=>{ if(real && my===token) pl.setLatLngs(real); });
+  }));
+
+  const legs = day.legs.map(l=>{
+    const pts = curvePts(l.from,l.to);
+    const line = L.polyline(pts, {color:COL[l.mode], weight:3, opacity:animate?.2:.9,
+      lineCap:'round', dashArray: l.mode==='drive' ? '7 7' : null}).addTo(layers.route);
+    const rec = {l, pts, line};
+    roadPath(l).then(real=>{ if(real && my===token){ rec.pts = real; line.setLatLngs(real); } });
+    return rec;
+  });
+  day.legs.slice(1).forEach(l=>{
+    L.marker(LL(l.from), {icon:L.divIcon({className:'', html:'<div class="xfer"></div>', iconSize:[0,0]}),
+      interactive:false}).addTo(layers.route);
+  });
+
+  drawPins(day);
+
+
+  const startLL = legs[0].pts[0];
+  const dirLeg = day.legs[animate ? 0 : day.legs.length-1];
+  setTimeout(()=>{ const a=map.latLngToContainerPoint(LL(dirLeg.from)), b=map.latLngToContainerPoint(LL(dirLeg.to));
+                   applyHeading(b.x-a.x, b.y-a.y, true); }, 60);
+  vehMarker = L.marker(animate ? startLL : legs[legs.length-1].pts.at(-1), {
+    icon: vehIcon(day.legs[0].mode), interactive:false, zIndexOffset:-100 }).addTo(layers.veh);
+
+  const bounds = L.latLngBounds([]);
+  day.legs.forEach(l=>{bounds.extend(LL(l.from));bounds.extend(LL(l.to));});
+  day.spots.forEach(s=>bounds.extend(LL(s.p)));
+    const narrow = map.getSize().x < 640;
+  map.flyToBounds(bounds, {paddingTopLeft: narrow?[46,80]:[120,150],
+                           paddingBottomRight: narrow?[46,50]:[100,90],
+                           maxZoom:12, duration:.9});
+
+  document.getElementById('legday').textContent = 'Day ' + (i+1) + ' · ' + day.d;
+  if(!animate){ document.getElementById('legtext').textContent = day.city; return; }
+
+  const step = k => {
+    if(my!==token) return;
+    if(k>=legs.length){
+      document.getElementById('legtext').textContent = day.city;
+      if(autoPlay){
+        clearTimeout(autoTimer);
+        autoTimer = setTimeout(()=>{
+          if(!autoPlay || my!==token) return;
+          fadeOut().then(()=>{
+            if(!autoPlay || my!==token) return;
+            cur = (i+1) % DAYS.length;
+            paintDays(); paintCards(); render(cur, true);
+          });
+        }, 2600);
+      }
+      return;
+    }
+    const leg = legs[k], l = leg.l, line = leg.line;
+    line.setStyle({opacity:.95});
+    vehMarker.setIcon(vehIcon(l.mode));
+    hideSpotCard();
+    document.getElementById('legtext').textContent = l.label;
+    const pa = map.latLngToContainerPoint(LL(l.from)), pb = map.latLngToContainerPoint(LL(l.to));
+    setTimeout(()=>applyHeading(pb.x-pa.x, pb.y-pa.y, true), 20);
+    const legDist = LL(l.from).distanceTo(LL(l.to));
+    if(legDist < 30){ step(k+1); return; }
+    let preWait = 0;
+    if(legDist < 2600){                                  // 市區內短程 → 拉近看清楚
+      const mid = L.latLng((LL(l.from).lat+LL(l.to).lat)/2, (LL(l.from).lng+LL(l.to).lng)/2);
+      map.flyTo(mid, legDist < 900 ? 16 : 15, {duration:.9});
+      preWait = 1400;
+    } else if(legDist < 16000){                          // 近郊中程（如旭川→旭山動物園）→ 貼近這一段
+      map.flyToBounds(L.latLngBounds([LL(l.from), LL(l.to)]),
+        {paddingTopLeft: narrow?[50,84]:[130,150], paddingBottomRight: narrow?[50,50]:[100,90],
+         maxZoom:13.5, duration:1});
+      preWait = 1400;
+    } else if(map.getZoom() > 12.2){                     // 長程 → 先退回當日全貌
+      map.flyToBounds(bounds, {paddingTopLeft: narrow?[46,80]:[120,150],
+        paddingBottomRight: narrow?[46,50]:[100,90], maxZoom:12, duration:1.1});
+      preWait = 1400;
+    }
+    const dur = Math.max(3200, Math.min(9000, legDist/16));
+    const t0 = performance.now() + preWait; lastPan = t0;
+    const tick = now => {
+      if(my!==token) return;
+      if(now < t0){ raf = requestAnimationFrame(tick); return; }
+      const t = Math.min(1,(now-t0)/dur);
+      const e = t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+      const pts = leg.pts;
+      const idx = Math.min(pts.length-1, Math.round(e*(pts.length-1)));
+      const here = pts[idx];
+      vehMarker.setLatLng(here);
+      if(now - lastPan > 260){
+        lastPan = now;
+        const sz = map.getSize();
+        const p = map.latLngToContainerPoint(here);
+        const m = { x: sz.x*0.26, y: sz.y*0.26 };
+        if(p.x < m.x || p.x > sz.x-m.x || p.y < m.y || p.y > sz.y-m.y)
+          map.panTo(here, {animate:true, duration:.7, easeLinearity:.35});
+      }
+      if(t<1){ raf = requestAnimationFrame(tick); return; }
+      const sp = spotAt(day, l);
+      if(sp) map.flyTo(LL(sp.p), Math.max(map.getZoom(), 14.5), {duration:1});
+      const shown = sp
+        ? new Promise(r=>setTimeout(r, 1050)).then(()=>showSpotCard(sp, day))
+        : Promise.resolve();
+      shown.then(()=>{ if(my===token) setTimeout(()=>step(k+1), sp ? 5400 : 900); });
+    };
+    raf = requestAnimationFrame(tick);
+  };
+  Promise.race([
+    Promise.all([...day.legs.map(l=>roadPath(l)), prefetchPhotos(day)]),
+    new Promise(r=>setTimeout(r, 9000))
+  ]).then(()=>{ if(my!==token) return; fadeIn(); setTimeout(()=>{ if(my===token) step(0); }, 1200); });
+}
+
+let headAng = 0, headFlip = 1;
+function spotAt(day, leg){
+  return leg.spot ? day.spots.find(s=>s.n===leg.spot) : null;
+}
+function hideSpotCard(){
+  const el = document.querySelector('.spotpop');
+  document.querySelectorAll('.card.active').forEach(c=>c.classList.remove('active'));
+  if(!el){ layers.card.clearLayers(); return; }
+  el.classList.add('out');
+  setTimeout(()=>layers.card.clearLayers(), 240);
+}
+async function photoFor(name){
+  if(OWN[name]) return OWN[name];
+  const w = await wikiPhoto(name);
+  return w && w.src;
+}
+function prefetchPhotos(day){
+  return Promise.all(day.spots.map(async s=>{
+    const src = await photoFor(s.n);
+    if(!src) return;
+    await new Promise(res=>{ const im = new Image(); im.onload=res; im.onerror=res; im.src=src; setTimeout(res,5000); });
+  }));
+}
+async function showSpotCard(spot, day){
+  hideSpotCard();
+  const img = await photoFor(spot.n);
+  if(img) await new Promise(res=>{ const im = new Image(); im.onload = res; im.onerror = res; im.src = img;
+                                   setTimeout(res, 2500); });
+  const flip = map.latLngToContainerPoint(LL(spot.p)).x > map.getSize().x * 0.55;
+  const html = '<div class="spotpop'+(flip?' flip':'')+'">'
+    + (img ? '<div class="ph" style="background-image:url(\''+img+'\')"></div>' : '')
+    + '<div class="tx"><b>'+spot.n+'</b><span>'+spot.time+'　'+spot.act+'</span></div></div>';
+  L.marker(LL(spot.p), {icon:L.divIcon({className:'', html, iconSize:[0,0]}),
+    interactive:false, zIndexOffset:2000}).addTo(layers.card);
+  const idx = day.spots.indexOf(spot);
+  if(idx >= 0){
+    const cards = document.querySelectorAll('#cards .card');
+    document.querySelectorAll('.card.active').forEach(c=>c.classList.remove('active'));
+    if(cards[idx]) cards[idx].classList.add('active');
+  }
+}
+function applyHeading(dx,dy,snap){
+  const el = vehMarker && vehMarker.getElement() && vehMarker.getElement().querySelector('.core');
+  if(!el) return;
+  const len = Math.hypot(dx,dy);
+  if(len < 0.6) return;
+  if(Math.abs(dx) > 4) headFlip = dx < 0 ? -1 : 1;          // 只有明顯左右移動才翻面
+  let target = Math.atan2(dy, Math.abs(dx)) * 180/Math.PI;
+  target = Math.max(-20, Math.min(20, target)) * (headFlip < 0 ? -1 : 1);
+  headAng = target;
+  el.style.transform = 'rotate('+headAng.toFixed(1)+'deg) scaleX('+headFlip+')';
+}
+function vehIcon(mode){
+  return L.divIcon({className:'', iconSize:[0,0],
+    html:'<div class="veh"><div class="core">'+ICON[mode](40)+'</div></div>'});
+}
+function hexA(hex,a){ const n=parseInt(hex.slice(1),16);
+  return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
+
+/* pins with screen-space clustering */
+function drawPins(day){
+  layers.pins.clearLayers();
+  const last = day.legs[day.legs.length-1];
+  const destPt = map.latLngToContainerPoint(LL(last.to));
+  const clusters=[];
+  const list = day.spots.map((s,k)=>({s,k}));
+  if(day.stay) list.push({s:{n:day.stay.n, time:day.stay.time, p:day.stay.p}, k:-1, stay:true});
+  list.forEach(it=>{
+    const pt = map.latLngToContainerPoint(LL(it.s.p));
+    const hit = clusters.find(c=>c.pt.distanceTo(pt)<70);
+    if(hit) hit.items.push(it); else clusters.push({pt, ll:LL(it.s.p), items:[it]});
+  });
+  const w = map.getSize().x;
+  clusters.forEach(c=>{
+    const flip = c.pt.x > w*0.62;
+    const near = destPt && c.pt.distanceTo(destPt) < 46;
+    const html = '<div class="pin '+day.mode+(flip?' flip':'')+(near?' far':'')+'"><span class="dot"></span><div class="labels">'
+      + c.items.map(it=>'<b'+((it.stay||it.s.stay)?' class="stay"':'')+'><i>'+it.s.time+'</i>'+it.s.n+'</b>').join('') + '</div></div>';
+    L.marker(c.ll, {icon:L.divIcon({className:'',html,iconSize:[0,0]}), interactive:false}).addTo(layers.pins);
+  });
+}
+map.on('zoomend moveend', ()=> drawPins(DAYS[cur]));
+
+/* ---------- day list ---------- */
+const daysEl = document.getElementById('days');
+DAYS.forEach((day,i)=>{
+  const el = document.createElement('div');
+  el.className = 'day' + (day.mode==='drive'?' drive':'');
+  el.innerHTML = '<div><div class="n">DAY '+(i+1)+'</div>'
+    + '<div><span class="d">'+day.d+'</span><span class="w">（'+day.w+'）</span></div>'
+    + '<div class="city">'+day.city+'</div></div>'
+    + '<div class="mode">'+ICON[day.mode](24)+'</div>';
+  el.addEventListener('click', ()=>{ autoPlay=false; clearTimeout(autoTimer);
+    fadeOut().then(()=>{ cur=i; paintDays(); paintCards(); render(i,true); }); });
+  daysEl.appendChild(el);
+});
+function paintDays(){ [...daysEl.children].forEach((el,i)=>el.classList.toggle('on', i===cur)); }
+
+const OWN = {
+ "Nord 小樽飯店":"uploads/pasted-1786602603104-0.png",
+ "旭山動物園":"uploads/pasted-1786602674046-0.png",
+ "蜂屋 五条創業店":"uploads/pasted-1786602844318-0.png",
+ "新千歲空港":"uploads/pasted-1786602892173-0.png",
+ "平和通商店街":"uploads/pasted-1786602996832-0.png",
+ "三角市場":"uploads/pasted-1786603092518-0.png",
+ "洞爺觀光酒店":"uploads/pasted-1786603324026-0.png",
+ "湯之川 熱帶動植物園":"uploads/pasted-1786603401325-0.png",
+ "金森紅磚倉庫":"uploads/pasted-1786603495583-0.png",
+ "山崎洋服店":"uploads/pasted-1786603903460-0.png",
+ "函館山纜車":"uploads/pasted-1786603639537-0.png",
+ "五島軒 雪河亭":"uploads/pasted-1786603742821-0.png",
+ "客美多咖啡 函館港濱店":"uploads/pasted-1786603837584-0.png",
+ "成吉思汗大黑屋 五稜郭店":"uploads/pasted-1786603953928-0.png",
+ "札幌一粒庵":"uploads/pasted-1786604027649-0.png",
+ "旭川 JR 酒店":"uploads/pasted-1786607686879-0.png",
+ "Condominium View Mt Hakodate":"uploads/pasted-1786608263591-0.png",
+ "薄野 民宿 IK1003":"uploads/pasted-1786609863503-0.png"
+};
+const wikiCache = new Map();
+async function wikiPhoto(name){
+  if(wikiCache.has(name)) return wikiCache.get(name);
+  const titles = WIKI[name] || [];
+  for(const t of titles){
+    for(const lang of ['zh','ja']){
+      try{
+        const u = 'https://'+lang+'.wikipedia.org/w/api.php?action=query&format=json&origin=*'
+          + '&prop=pageimages&piprop=thumbnail&pithumbsize=900&redirects=1&titles=' + encodeURIComponent(t);
+        const r = await fetch(u); if(!r.ok) continue;
+        const j = await r.json();
+        const pages = j.query && j.query.pages || {};
+        for(const k in pages){
+          const th = pages[k].thumbnail;
+          if(th && th.source){
+            const out = {src:th.source, title:pages[k].title, lang};
+            wikiCache.set(name, out); return out;
+          }
+        }
+      }catch(e){}
+    }
+  }
+  wikiCache.set(name, null); return null;
+}
+function fillPhotos(day, dayIdx){
+  day.spots.forEach((s,k)=>{
+    if(OWN[s.n]){
+      const slot = document.getElementById('d'+(dayIdx+1)+'s'+(k+1));
+      if(slot) slot.setAttribute('src', OWN[s.n]);
+      return;
+    }
+    wikiPhoto(s.n).then(p=>{
+      if(!p || cur !== dayIdx) return;
+      const slot = document.getElementById('d'+(dayIdx+1)+'s'+(k+1));
+      if(slot && !slot.getAttribute('src')) slot.setAttribute('src', p.src);
+      const cap = document.getElementById('cap'+(dayIdx+1)+'-'+(k+1));
+      if(cap) cap.innerHTML = '圖：<a href="https://'+p.lang+'.wikipedia.org/wiki/'
+        + encodeURIComponent(p.title) + '" target="_blank" rel="noopener">維基共享資源</a>';
+    });
+  });
+}
+
+function paintCards(){
+  const day = DAYS[cur];
+  document.getElementById('btitle').textContent = 'Day '+(cur+1)+' · '+day.d+' '+day.city;
+  document.getElementById('bmeta').textContent = day.note;
+  document.getElementById('cards').innerHTML = day.spots.map((s,k)=>
+    '<article class="card'+(day.mode==='drive'?' drive':'')+'">'
+    + '<div class="img"><image-slot id="d'+(cur+1)+'s'+(k+1)+'" shape="rect" placeholder="拖曳 '+s.n+' 的照片到這裡"></image-slot></div>'
+    + '<div class="body"><div class="tag'+(s.stay?' stayc':'')+'">'+(k+1)+' · '+s.time+'</div><h3>'+s.n+'</h3>'
+    + '<div class="kana">'+s.act+'</div><p>'+s.d+'</p>'
+    + '<div class="credit" id="cap'+(cur+1)+'-'+(k+1)+'"></div></div></article>').join('');
+  fillPhotos(day, cur);
+  document.querySelectorAll('#cards .card').forEach((el,k)=>{
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', ()=>{
+      const s = DAYS[cur].spots[k];
+      if(!s) return;
+      autoPlay = false; clearTimeout(autoTimer);
+      if(raf) cancelAnimationFrame(raf);
+      token++;                                    // 中止進行中的動畫
+      document.querySelectorAll('.card.active').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      map.flyTo(LL(s.p), 15.5, {duration:1});
+      if(vehMarker) vehMarker.setLatLng(LL(s.p));
+      document.getElementById('legtext').textContent = s.time + '　' + s.n;
+      setTimeout(()=>showSpotCard(s, DAYS[cur]), 1050);
+    });
+  });
+}
+
+function buildBase(){
+  DAYS.forEach(dd=>dd.legs.forEach(l=>{
+    const pl = L.polyline(curvePts(l.from,l.to),
+      {color:'#9aa0a6', weight:2, opacity:.4, lineCap:'round', interactive:false}).addTo(layers.base);
+    roadPath(l).then(real=>{ if(real) pl.setLatLngs(real); });
+  }));
+}
+buildBase();
+paintDays(); paintCards(); render(0, true);
+</script>
+</body>
+</html>
