@@ -9,6 +9,8 @@ import { computeStats } from './overview.js';
 import { buildCities } from './cities.js';
 import { parseDining, ramenTrio } from './dining.js';
 import { buildLodging } from './lodging.js';
+import { summarizeBudget } from './budget.js';
+import { RATE } from '../config.js';
 import { findDateAnomalies } from './dates.js';
 import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
@@ -191,6 +193,34 @@ async function start() {
       </div>
     </article>`;
   }).join('');
+
+  const CAT_COLOR = { 交通: '#0e7ad4', 住宿: '#7a5cc4', 餐飲: '#f4622e', 生活: '#12a97a' };
+  const budget = summarizeBudget(tabs.budget.ok ? tabs.budget.rows : [], RATE);
+  const jp = n => '¥' + n.toLocaleString('en-US');
+
+  document.getElementById('costblock').innerHTML = `
+    <div class="rate">匯率　<b>¥1 = NT$${RATE}</b></div>
+    <div class="costtop">
+      <div class="stat"><div class="v">${nt(Math.round(budget.totalTwd))}</div><div class="k">已登錄總額（台幣）</div></div>
+      <div class="stat"><div class="v">${budget.filledCount}<small> / ${budget.totalCount} 項</small></div><div class="k">已填金額項數</div></div>
+    </div>
+    <div class="costgrid">
+      <div class="panel"><h3>分類佔比</h3>
+        ${budget.categoryTotals.sort((a, b) => (b.twd ?? 0) - (a.twd ?? 0)).map(c => `
+          <div class="cat">
+            <div class="top"><b>${c.category}</b><span>${c.twd != null ? nt(Math.round(c.twd)) : '待補'}</span></div>
+            <div class="bar"><i style="width:${budget.totalTwd && c.twd ? (c.twd / budget.totalTwd * 100) : 0}%;
+              background:${CAT_COLOR[c.category] || '#a89c8c'}"></i></div>
+          </div>`).join('')}
+      </div>
+      <div class="panel"><h3>明細</h3>
+        ${budget.items.map(it => `
+          <div class="citem${it.filled ? '' : ' blank'}">
+            <div class="nm">${it.name}<i>${it.category} · ${it.subcategory}</i></div>
+            <div class="amt">${it.filled ? nt(Math.round(it.twd)) + (it.jpy ? `<em>${jp(it.jpy)}</em>` : '') : '待補'}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
   const cardsEl = document.getElementById('cards');
