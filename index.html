@@ -232,6 +232,22 @@ section{padding:64px 0}
 .task .tx i{font-style:normal;display:block;font-size:9.5px;color:var(--ink-3);letter-spacing:.08em;margin-top:3px}
 .task.done .tx{color:var(--ink-3)}
 @media(max-width:1080px){.prep{grid-template-columns:1fr}}
+
+.veh{width:80px;height:52px;margin:-26px 0 0 -40px;pointer-events:none}
+.veh .core{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 3px 5px rgba(43,39,33,.35));
+  transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.xfer{width:12px;height:12px;border-radius:50%;background:#fdfaf4;border:2px solid #5c5348}
+.spotpop{width:180px;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:0 18px 34px -22px rgba(43,39,33,.9);opacity:0;transform:translateY(8px) scale(.94);
+  animation:pop .28s cubic-bezier(.2,.9,.3,1.2) forwards}
+.spotpop.out{animation:popout .24s ease forwards}
+@keyframes pop{to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes popout{to{opacity:0;transform:translateY(-4px) scale(.97)}}
+.spotpop .ph{height:96px;background-size:cover;background-position:center}
+.spotpop .tx{padding:9px 11px 11px}
+.spotpop .tx b{display:block;font-family:"Zen Maru Gothic";font-weight:700;font-size:12.5px}
+.spotpop .tx span{font-size:10.5px;color:var(--ink-3)}
+.card.active{border-color:var(--jr);box-shadow:0 0 0 2px #dcefff,0 20px 34px -26px rgba(43,39,33,.6)}
 </style>
 </head>
 <body>

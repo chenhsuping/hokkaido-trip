@@ -47,7 +47,7 @@ export function renderTimeline(el, { days, tripEnd, onSelect }) {
 
   function select(index) {
     rows.forEach(r => r.el.classList.toggle('on', r.index === index));
-    onSelect(index);
+    return onSelect(index);
   }
 
   return { select };

@@ -6,7 +6,7 @@ export function renderCards(el, { day, resolve }) {
       ? `<img src="${p.photo}" alt="${s.name}" loading="lazy">`
       : '';
     const desc = p?.desc || s.activity || '';
-    return `<article class="card${s.pending ? ' pending' : ''}">
+    return `<article class="card${s.pending ? ' pending' : ''}" data-index="${i}">
       <div class="img">${img}</div>
       <div class="body">
         <span class="tag${s.stay ? ' stay' : ''}">${i + 1} · ${s.time}</span>
@@ -18,29 +18,41 @@ export function renderCards(el, { day, resolve }) {
   }).join('');
 }
 
-/**
- * 自動連播：全程停留 delayMs 後進 Day 1，之後逐日推進，播完回到全程。
- * 使用者點選任一日期即停止（由 main.js 呼叫 stop()）。
- */
-export function startAutoplay({ days, timeline, delayMs = 2600 }) {
-  let timer = null;
-  let i = -1;
-  let stopped = false;
+/** 把第 index 張卡片標記為 active，其餘清除。index 為 null 時只清除。 */
+export function highlightCard(el, index) {
+  el.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
+  if (index == null) return;
+  el.querySelector(`.card[data-index="${index}"]`)?.classList.add('active');
+}
 
-  function tick() {
-    if (stopped) return;
-    i += 1;
-    if (i >= days.length) i = -1;
-    timeline.select(i < 0 ? null : i);
-    timer = setTimeout(tick, delayMs);
+/**
+ * 自動連播：「全程」停留 allDwellMs 後進 Day 1；每天動畫播完（由 timeline.select()
+ * 回傳的 Promise resolve）才排程下一天，播完全部回到「全程」。
+ * 固定間隔在階段一（靜態渲染）是對的，但單日動畫可能長達數十秒，
+ * 必須等真正播完才切換，否則會在動畫播到一半時被切斷。
+ */
+export function startAutoplay({ days, timeline, allDwellMs = 2600, dayGapMs = 2600 }) {
+  let stopped = false;
+  let timer = null;
+
+  function stop() {
+    stopped = true;
+    clearTimeout(timer);
   }
 
-  timer = setTimeout(tick, delayMs);
+  function scheduleAll() {
+    timeline.select(null);
+    timer = setTimeout(() => { if (!stopped) playDay(0); }, allDwellMs);
+  }
 
-  return {
-    stop() {
-      stopped = true;
-      clearTimeout(timer);
-    },
-  };
+  async function playDay(i) {
+    if (stopped) return;
+    if (i >= days.length) return scheduleAll();
+    await timeline.select(i);
+    if (stopped) return;
+    timer = setTimeout(() => playDay(i + 1), dayGapMs);
+  }
+
+  scheduleAll();
+  return { stop };
 }

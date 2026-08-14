@@ -4,7 +4,7 @@ import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
 import { createMap, DAY_COLORS } from './map.js';
 import { renderTimeline } from './timeline.js';
-import { renderCards, startAutoplay } from './cards.js';
+import { renderCards, startAutoplay, highlightCard } from './cards.js';
 import { computeStats } from './overview.js';
 import { buildCities } from './cities.js';
 import { parseDining, ramenTrio } from './dining.js';
@@ -247,10 +247,13 @@ async function start() {
       if (index === null) {
         mapApi.showAll();
         cardsEl.innerHTML = '';
-      } else {
-        mapApi.showDay(index);
-        renderCards(cardsEl, { day: days[index], resolve });
+        return Promise.resolve();
       }
+      mapApi.showDay(index);
+      renderCards(cardsEl, { day: days[index], resolve });
+      return mapApi.playDay(index, {
+        onArrive: spotIndex => highlightCard(cardsEl, spotIndex),
+      });
     },
   });
 
