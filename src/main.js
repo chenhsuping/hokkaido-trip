@@ -6,6 +6,7 @@ import { createMap, DAY_COLORS } from './map.js';
 import { renderTimeline } from './timeline.js';
 import { renderCards, startAutoplay } from './cards.js';
 import { computeStats } from './overview.js';
+import { buildCities } from './cities.js';
 import { findDateAnomalies } from './dates.js';
 import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
@@ -98,6 +99,36 @@ async function start() {
     <div class="daykey">${days.map((d, i) =>
       `<b><i style="background:${DAY_COLORS[i % DAY_COLORS.length]}"></i>${d.date.iso.slice(5).replace('-', '/')}　${d.city}</b>`
     ).join('')}</div>`;
+
+  const CITY_COPY = {
+    '旭川': { en: 'Asahikawa',
+      d: '行程的最北點。從新千歲搭特急北上，隔天一早直奔冬季限定的企鵝散步。' },
+    '小樽': { en: 'Otaru',
+      d: '只待一個晚上加一個早上。傍晚抵達，隔天在市場吃完海鮮丼就上車南下。' },
+    '洞爺': { en: 'Toya',
+      d: '唯一的溫泉夜。湖畔泡完湯，隔天早上取車，這趟唯一的自駕日從這裡開始。' },
+    '函館': { en: 'Hakodate',
+      d: '待最久的城市。夜景、元町坡道、五稜郭、朝市，還有吃不完的東西。' },
+    '札幌': { en: 'Sapporo',
+      d: '前面幾天都只是在這裡轉車，最後才真正走進市區，然後跨年。' },
+  };
+  const cities = buildCities(days);
+  document.getElementById('herocities').textContent = cities.map(c => c.name).join('　');
+  document.getElementById('citiesgrid').innerHTML = cities.map(c => {
+    const copy = CITY_COPY[c.name] || { en: '', d: '' };
+    const photo = c.spotNames.map(n => resolve(n)?.photo).find(Boolean);
+    const dayLabel = c.dayIndices.length
+      ? `Day ${c.dayIndices[0] + 1}${c.dayIndices.length > 1 ? '–' + (c.dayIndices.at(-1) + 1) : ''}`
+      : '';
+    return `<article class="city">
+      <div class="ph">${photo ? `<img src="${photo}" alt="${c.name}">` : ''}<span class="idx">${dayLabel}</span></div>
+      <div class="bd">
+        <h3>${c.name}<span>${copy.en}</span></h3>
+        <p>${copy.d}</p>
+        <div class="spots">${[...new Set(c.spotNames)].map(n => `<b>${n}</b>`).join('')}</div>
+      </div>
+    </article>`;
+  }).join('');
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
   const cardsEl = document.getElementById('cards');

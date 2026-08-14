@@ -75,4 +75,16 @@ describe('buildCities', () => {
     ] })];
     expect(buildCities(days).find(c => c.name === '函館').spotNames).toEqual(['A', 'B']);
   });
+
+  it('排序依「第一次非轉車出現」，不是單純第一次出現——轉車站不能讓一座城市搶到排序前面', () => {
+    const days = [
+      day({ index: 0, spots: [
+        spot({ name: '新千歲空港', city: '千歲市' }),
+        spot({ name: 'JR 札幌站', city: '札幌市', activity: '轉車', transfer: true }),
+        spot({ name: 'JR 旭川站', city: '旭川市' }),
+      ] }),
+      day({ index: 1, spots: [spot({ name: '大通公園', city: '札幌市' })] }),
+    ];
+    expect(buildCities(days).map(c => c.name)).toEqual(['旭川', '札幌']);
+  });
 });
