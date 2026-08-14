@@ -163,6 +163,28 @@ section{padding:64px 0}
 .eat .rz{font-size:9.5px;letter-spacing:.08em;font-weight:500;margin-top:5px}
 .eat .rz.yes{color:#0d7a58}
 .eat .rz.no{color:#c2451c}
+
+.stays{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:20px}
+.stay{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);
+  transition:transform .25s}
+.stay:hover{transform:translateY(-3px)}
+.stay .ph{aspect-ratio:16/10;background:#f4ece0;position:relative;overflow:hidden}
+.stay .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.stay .ph .nights{position:absolute;top:11px;left:11px;background:var(--stay);color:#fff;
+  border-radius:99px;padding:4px 11px;font-size:10px;letter-spacing:.1em;font-weight:500}
+.stay .bd{padding:15px 17px 19px;display:flex;flex-direction:column;gap:7px;flex:1}
+.stay .ct{font-size:10px;letter-spacing:.14em;color:var(--ink-3)}
+.stay h3{font-size:15px;font-weight:700;letter-spacing:.02em;margin:0;line-height:1.4}
+.stay .dt{font-size:11px;color:var(--ink-2);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.stay .ft{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:10px;
+  border-top:1px dashed rgba(43,39,33,.16)}
+.stay .price{font-family:"Zen Maru Gothic";font-weight:700;font-size:16px}
+.stay .price.todo{font-size:11.5px;font-weight:500;color:var(--ink-3);font-family:"Noto Sans TC"}
+.badge{font-size:9.5px;letter-spacing:.08em;font-weight:500;border-radius:99px;padding:4px 9px}
+.badge.ok{background:#e3f6ee;color:#0d7a58}
+.badge.no{background:#fdece5;color:#c2451c}
+.stay .memo{font-size:10px;color:var(--ink-3);letter-spacing:.04em}
 </style>
 </head>
 <body>

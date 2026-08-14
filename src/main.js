@@ -8,6 +8,7 @@ import { renderCards, startAutoplay } from './cards.js';
 import { computeStats } from './overview.js';
 import { buildCities } from './cities.js';
 import { parseDining, ramenTrio } from './dining.js';
+import { buildLodging } from './lodging.js';
 import { findDateAnomalies } from './dates.js';
 import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
@@ -163,6 +164,33 @@ async function start() {
         </div>
       </article>`;
     }).join('');
+
+  const nt = n => 'NT$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const stays = buildLodging({
+    lodgingRows: tabs.lodging.ok ? tabs.lodging.rows : [],
+    todoRows: tabs.todo.ok ? tabs.todo.rows : [],
+    tripStart: TRIP_START, tripEnd: TRIP_END,
+  });
+  document.getElementById('staysgrid').innerHTML = stays.map(s => {
+    const photo = resolve(s.name)?.photo;
+    const dt = s.checkinIso && s.checkoutIso
+      ? `${s.checkinIso.slice(5).replace('-', '/')} — ${s.checkoutIso.slice(5).replace('-', '/')}`
+      : '日期待補';
+    return `<article class="stay">
+      <div class="ph">${photo ? `<img src="${photo}" alt="${s.name}">` : ''}
+        ${s.nights != null ? `<span class="nights">${s.nights} 晚</span>` : ''}</div>
+      <div class="bd">
+        <div class="ct">${s.city}</div>
+        <h3>${s.name}</h3>
+        <div class="dt">${dt}</div>
+        <div class="memo">${s.memo}</div>
+        <div class="ft">
+          <div class="price${s.ntd ? '' : ' todo'}">${s.ntd ? nt(s.ntd) : '費用待補'}</div>
+          <span class="badge ${s.booked ? 'ok' : 'no'}">${s.booked ? '已訂房' : '未訂房'}</span>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
   const cardsEl = document.getElementById('cards');
