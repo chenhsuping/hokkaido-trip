@@ -2,6 +2,7 @@ import { fetchAllTabs } from './sheets.js';
 import { buildItinerary } from './itinerary.js';
 import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
+import { createMap } from './map.js';
 import { findDateAnomalies } from './dates.js';
 import { TRIP_START } from '../config.js';
 
@@ -64,7 +65,10 @@ async function start() {
 
   showNotice(messages);
 
-  window.__trip = { days, resolve, tabs, unknownNames, geocoded };  // 供 Task 10-12 接手
+  const mapApi = createMap(document.getElementById('map'), { days, resolve });
+  mapApi.showAll();
+
+  window.__trip = { days, resolve, tabs, unknownNames, geocoded, mapApi };  // 供 Task 11-12 接手
 }
 
 start();
