@@ -3,8 +3,9 @@ import { buildItinerary } from './itinerary.js';
 import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
 import { createMap } from './map.js';
+import { renderTimeline } from './timeline.js';
 import { findDateAnomalies } from './dates.js';
-import { TRIP_START } from '../config.js';
+import { TRIP_START, TRIP_END } from '../config.js';
 
 const notice = document.getElementById('notice');
 
@@ -66,9 +67,14 @@ async function start() {
   showNotice(messages);
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
-  mapApi.showAll();
 
-  window.__trip = { days, resolve, tabs, unknownNames, geocoded, mapApi };  // 供 Task 11-12 接手
+  const timeline = renderTimeline(document.getElementById('daylist'), {
+    days, tripEnd: TRIP_END,
+    onSelect: index => (index === null ? mapApi.showAll() : mapApi.showDay(index)),
+  });
+  timeline.select(null);
+
+  window.__trip = { days, resolve, tabs, unknownNames, geocoded, mapApi, timeline };  // 供 Task 12 接手
 }
 
 start();
