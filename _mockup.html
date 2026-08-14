@@ -623,7 +623,11 @@ const TASKS = [
   {c:'交通', n:'JR Rent-A-Car 預約租車 (12/28)',            done:false},
   {c:'交通', n:'駕照譯本',                                  done:false},
   {c:'餐飲', n:'成吉思汗大黑屋 函館五稜郭店 預約訂位 (12/30)', done:false},
-  {c:'生活', n:'eSim',                                      done:false}
+  {c:'生活', n:'eSim',                                      done:false},
+  {c:'生活', n:'旭山動物園門票 預訂',                          done:false},
+  {c:'生活', n:'旅遊平安險+旅遊不便險',                        done:false},
+  {c:'生活', n:'日幣現金',                                   done:false},
+  {c:'其他', n:'日本入境登錄',                                done:false}
 ];
 const dn = TASKS.filter(t=>t.done).length;
 document.getElementById('ppct').textContent = Math.round(dn/TASKS.length*100) + '%';
