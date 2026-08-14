@@ -6,6 +6,7 @@ import { createMap } from './map.js';
 import { renderTimeline } from './timeline.js';
 import { renderCards, startAutoplay } from './cards.js';
 import { findDateAnomalies } from './dates.js';
+import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
 
 const notice = document.getElementById('notice');
@@ -66,6 +67,24 @@ async function start() {
   }
 
   showNotice(messages);
+
+  document.getElementById('cd').textContent = formatCountdown(TRIP_START);
+  document.getElementById('herodates').innerHTML =
+    `${TRIP_START.replace(/-/g, '.')} — ${TRIP_END.replace(/-/g, '.')}`;
+  const heroImg = document.getElementById('heroimg');
+  const firstPhoto = days.flatMap(d => d.spots).map(s => resolve(s.name)?.photo).find(Boolean);
+  if (firstPhoto) heroImg.src = firstPhoto;
+
+  const navLinks = [...document.querySelectorAll('#navlinks a')];
+  const sections = navLinks.map(a => document.querySelector(a.getAttribute('href')));
+  const spy = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const idx = sections.indexOf(e.target);
+      navLinks.forEach((a, i) => a.classList.toggle('on', i === idx));
+    }
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => s && spy.observe(s));
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
   const cardsEl = document.getElementById('cards');
