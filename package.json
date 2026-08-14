@@ -1,0 +1,13 @@
+{
+  "name": "hokkaido-trip-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "node tools/serve.js . 8777"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}
