@@ -2,9 +2,10 @@ import { fetchAllTabs } from './sheets.js';
 import { buildItinerary } from './itinerary.js';
 import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
-import { createMap } from './map.js';
+import { createMap, DAY_COLORS } from './map.js';
 import { renderTimeline } from './timeline.js';
 import { renderCards, startAutoplay } from './cards.js';
+import { computeStats } from './overview.js';
 import { findDateAnomalies } from './dates.js';
 import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
@@ -85,6 +86,18 @@ async function start() {
     }
   }, { rootMargin: '-40% 0px -55% 0px' });
   sections.forEach(s => s && spy.observe(s));
+
+  const stats = computeStats({ days, resolve, tripStart: TRIP_START, tripEnd: TRIP_END });
+  document.getElementById('statband').innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="v">${stats.plannedDays}<small> / ${stats.totalDaySpan} 天</small></div><div class="k">已規劃天數</div></div>
+      <div class="stat"><div class="v">${stats.cityCount}<small>座</small></div><div class="k">停留城市</div></div>
+      <div class="stat"><div class="v">${stats.spotCount}<small>個</small></div><div class="k">造訪地點</div></div>
+      <div class="stat"><div class="v">約 ${Math.round(stats.totalKm)}<small>km</small></div><div class="k">總移動距離</div></div>
+    </div>
+    <div class="daykey">${days.map((d, i) =>
+      `<b><i style="background:${DAY_COLORS[i % DAY_COLORS.length]}"></i>${d.date.iso.slice(5).replace('-', '/')}　${d.city}</b>`
+    ).join('')}</div>`;
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
   const cardsEl = document.getElementById('cards');
