@@ -4,6 +4,7 @@ import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
 import { createMap } from './map.js';
 import { renderTimeline } from './timeline.js';
+import { renderCards, startAutoplay } from './cards.js';
 import { findDateAnomalies } from './dates.js';
 import { TRIP_START, TRIP_END } from '../config.js';
 
@@ -67,14 +68,33 @@ async function start() {
   showNotice(messages);
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
+  const cardsEl = document.getElementById('cards');
+  let autoplay = null;
+  let userPicked = false;
 
   const timeline = renderTimeline(document.getElementById('daylist'), {
     days, tripEnd: TRIP_END,
-    onSelect: index => (index === null ? mapApi.showAll() : mapApi.showDay(index)),
+    onSelect: index => {
+      if (index === null) {
+        mapApi.showAll();
+        cardsEl.innerHTML = '';
+      } else {
+        mapApi.showDay(index);
+        renderCards(cardsEl, { day: days[index], resolve });
+      }
+    },
   });
-  timeline.select(null);
 
-  window.__trip = { days, resolve, tabs, unknownNames, geocoded, mapApi, timeline };  // 供 Task 12 接手
+  document.getElementById('daylist').addEventListener('click', () => {
+    if (userPicked) return;
+    userPicked = true;
+    autoplay?.stop();
+  }, { capture: true });
+
+  timeline.select(null);
+  autoplay = startAutoplay({ days, timeline });
+
+  window.__trip = { days, resolve, tabs, unknownNames, geocoded, mapApi, timeline, autoplay };
 }
 
 start();
