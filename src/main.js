@@ -7,6 +7,7 @@ import { renderTimeline } from './timeline.js';
 import { renderCards, startAutoplay } from './cards.js';
 import { computeStats } from './overview.js';
 import { buildCities } from './cities.js';
+import { parseDining, ramenTrio } from './dining.js';
 import { findDateAnomalies } from './dates.js';
 import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
@@ -129,6 +130,39 @@ async function start() {
       </div>
     </article>`;
   }).join('');
+
+  const dishes = parseDining(tabs.dining.ok ? tabs.dining.rows : []);
+  const trio = ramenTrio(dishes, resolve);
+  const trioNames = new Set(trio.map(t => t.name));
+
+  document.getElementById('ramenblock').innerHTML = trio.length ? `
+    <div class="ramen">
+      <div class="rh"><h3>北海道拉麵三大天王</h3><em>${trio.length}/3</em></div>
+      <div class="trio">${trio.map(t => `
+        <div class="rcard">
+          <div class="ph">${t.photo ? `<img src="${t.photo}" alt="${t.name}">` : ''}</div>
+          <div class="bd"><span class="ty">${t.flavor}</span><h4>${t.name}</h4>
+            <div class="mt">${t.city}　${t.date.slice(5).replace('-', '/')} ${t.meal}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('eatsgrid').innerHTML = dishes
+    .filter(d => d.name && !trioNames.has(d.name))
+    .map(d => {
+      const photo = resolve(d.name)?.photo;
+      const rz = d.reserved === null ? '' :
+        `<div class="rz ${d.reserved ? 'yes' : 'no'}">${d.reserved ? '已訂位' : '未訂位'}</div>`;
+      return `<article class="eat">
+        <div class="ph">${photo ? `<img src="${photo}" alt="${d.name}">` : ''}</div>
+        <div class="bd">
+          <div class="tg">${d.date.slice(5).replace('-', '/')} · ${d.meal}</div>
+          <h4>${d.name || '待定'}</h4>
+          <div class="mt">${d.city}　${d.note}</div>
+          ${rz}
+        </div>
+      </article>`;
+    }).join('');
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
   const cardsEl = document.getElementById('cards');
