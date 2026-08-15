@@ -7,12 +7,12 @@ const okResponse = coords => ({
 });
 
 describe('makeRoadFetcher', () => {
-  it('jr 模式一律不呼叫 OSRM，直接回傳 null', async () => {
-    const fetchFn = vi.fn();
+  it('jr 使用 driving 路線——鐵路大致沿主要道路走廊，比兩點直線貼近實際走向', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(okResponse([[141, 43], [141.1, 43.1]]));
     const { fetchRoad } = makeRoadFetcher({ fetchFn });
     const result = await fetchRoad('jr', { lat: 43, lng: 141 }, { lat: 43.1, lng: 141.1 });
-    expect(result).toBeNull();
-    expect(fetchFn).not.toHaveBeenCalled();
+    expect(result).toEqual([{ lat: 43, lng: 141 }, { lat: 43.1, lng: 141.1 }]);
+    expect(fetchFn.mock.calls[0][0]).toContain('/driving/');
   });
 
   it('drive 模式使用 driving 路線並轉為 {lat,lng}', async () => {

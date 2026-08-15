@@ -1,6 +1,11 @@
-const PROFILE = { drive: 'driving', bus: 'driving', walk: 'foot', tram: 'foot' };
+/**
+ * jr 也用 driving：OSRM demo 沒有鐵路 profile，但北海道的幹線鐵路大致沿著
+ * 主要道路的走廊前進（函館本線／室蘭本線都是如此），driving 路徑遠比兩點直線
+ * 貼近實際鐵道走向。實測札幌→旭川，driving 中點與直線中點相差約 8 公里。
+ */
+const PROFILE = { jr: 'driving', drive: 'driving', bus: 'driving', walk: 'foot', tram: 'foot' };
 
-/** OSRM demo 道路路徑抓取。jr 不路由；失敗一律回傳 null，退路交給呼叫端決定。 */
+/** OSRM demo 道路路徑抓取。失敗一律回傳 null，退路交給呼叫端決定。 */
 export function makeRoadFetcher({ fetchFn = fetch, maxConcurrent = 3 } = {}) {
   const cache = new Map();
   let active = 0;
@@ -26,7 +31,6 @@ export function makeRoadFetcher({ fetchFn = fetch, maxConcurrent = 3 } = {}) {
 
   return {
     async fetchRoad(mode, from, to) {
-      if (mode === 'jr') return null;
       const profile = PROFILE[mode] || 'driving';
       const key = `${profile}:${from.lat},${from.lng}:${to.lat},${to.lng}`;
       if (cache.has(key)) return cache.get(key);

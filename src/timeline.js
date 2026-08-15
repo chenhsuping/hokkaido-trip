@@ -9,20 +9,14 @@ function mmdd(date) {
 }
 
 /**
- * 時間軸首列為「全程」，末列為尚未規劃的區間（若有）。
+ * 時間軸列出各日，末列為尚未規劃的區間（若有）。
  * 未規劃區間刻意保留，讓行程的空缺在畫面上看得見。
+ *
+ * 沒有「全程」列：選單只給實際的日期。全程檢視仍存在（mapApi.showAll()），
+ * 由 select(null) 觸發，自動連播在播完最後一天後仍會回到它。
  */
 export function renderTimeline(el, { days, tripEnd, onSelect }) {
   const rows = [];
-
-  const all = document.createElement('div');
-  all.className = 'day all';
-  all.innerHTML = `<div><div class="lb">OVERVIEW</div>`
-    + `<div class="dd">全程<em>${days.length} 天</em></div>`
-    + `<div class="ci">${[...new Set(days.map(d => d.city))].filter(Boolean).join(' · ')}</div></div>`;
-  all.addEventListener('click', () => select(null));
-  rows.push({ el: all, index: null });
-  el.appendChild(all);
 
   days.forEach((d, i) => {
     const row = document.createElement('div');

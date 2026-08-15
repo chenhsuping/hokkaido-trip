@@ -26,8 +26,13 @@ export function highlightCard(el, index) {
 }
 
 /**
- * 自動連播：「全程」停留 allDwellMs 後進 Day 1；每天動畫播完（由 timeline.select()
- * 回傳的 Promise resolve）才排程下一天，播完全部回到「全程」。
+ * 自動連播：先顯示全程（select(null)）停留 allDwellMs 後進 Day 1；
+ * 每天動畫播完（由 timeline.select() 回傳的 Promise resolve）才排程下一天，
+ * 播完全部回到全程。
+ *
+ * 全程已不在日期選單中（使用者無法手動點選），但仍是連播的起訖狀態——
+ * select(null) 會顯示全程路線並清除所有日期高亮。
+ *
  * 固定間隔在階段一（靜態渲染）是對的，但單日動畫可能長達數十秒，
  * 必須等真正播完才切換，否則會在動畫播到一半時被切斷。
  */
