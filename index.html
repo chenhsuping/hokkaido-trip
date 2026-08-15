@@ -119,8 +119,11 @@ nav a.on{color:var(--ink);border-bottom-color:var(--drive)}
   color:rgba(255,255,255,.92);font-variant-numeric:tabular-nums}
 .hero .cities{font-size:12.5px;letter-spacing:.18em;color:rgba(255,255,255,.78)}
 
-section{padding:64px 0}
-.shead{margin-bottom:30px}
+/* 區塊間距：原本上下各 64px，加上每區自己的標題留白，捲起來像在翻
+   一頁一頁互不相干的東西。收到 40px 之後，區塊之間仍分得開，
+   但整份行程讀起來是連續的。 */
+section{padding:40px 0}
+.shead{margin-bottom:24px}
 .shead h2{font-size:25px;font-weight:700;letter-spacing:.08em;margin:9px 0 8px}
 .shead p{font-size:12.5px;color:var(--ink-2);line-height:1.9;margin:0;max-width:660px}
 @media(max-width:820px){.hero h1{font-size:36px}}
@@ -319,12 +322,9 @@ section{padding:64px 0}
   <div id="notice"></div>
 
   <section id="overview">
-    <div class="shead"><div class="cap">Overview</div><h2>這趟怎麼走</h2>
-      <p>先一路北上到旭川，再往南經小樽、洞爺抵達函館，最後拉回札幌跨年。</p></div>
     <div id="statband"></div>
-  </section>
-
-  <section id="days" style="padding-top:0">
+    <div class="shead"><div class="cap">Overview</div><h2>這趟怎麼走</h2>
+      <p>從桃園飛抵新千歲開始，逐日播放當天的路線。點左側日期可以直接跳到那一天。</p></div>
     <div class="daymap">
       <div id="daylist"></div>
       <div id="map"></div>
