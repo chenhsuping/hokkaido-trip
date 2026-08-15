@@ -158,25 +158,28 @@ export function ropewayIcon(s, c) {
  * 兩者的大小差異讓人一眼看出哪邊是機首。
  */
 export function planeIcon(s, c) {
-  c = c || '#5c9ecf';
+  c = c || '#f4622e';
   const sz = s * 0.72;
-  const BODY = '#f7f8fa', EDGE = '#9aa3b0';
+  // 機身純白、配色全靠橘：40px 下細節都糊掉，剩下的只有「白色機身 + 橘色塊」
+  // 這個對比，所以尾翼與引擎整片填橘，不用描邊點綴。
+  // 邊線取暖灰而非藍灰，否則白機身在偏黃的地圖底色上會顯得髒。
+  const BODY = '#ffffff', EDGE = '#c8a494';
   return wide(sz,
-    `<line x1="0" y1="9.4" x2="6" y2="10" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
-    <line x1="0" y1="14.6" x2="6" y2="14" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+    `<line x1="0" y1="9.4" x2="6" y2="10" stroke="${c}" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>
+    <line x1="0" y1="14.6" x2="6" y2="14" stroke="${c}" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>
 
     <path d="M27 11.5 L13.6 2.4 h-3.1 L18.2 11.5 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
     <path d="M27 12.5 L13.6 21.6 h-3.1 L18.2 12.5 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
-    <rect x="18.2" y="5.6" width="4.8" height="2.1" rx="1.05" fill="#cdd4de" stroke="${EDGE}" stroke-width=".6"/>
-    <rect x="18.2" y="16.3" width="4.8" height="2.1" rx="1.05" fill="#cdd4de" stroke="${EDGE}" stroke-width=".6"/>
+    <rect x="18.2" y="5.6" width="4.8" height="2.1" rx="1.05" fill="${c}"/>
+    <rect x="18.2" y="16.3" width="4.8" height="2.1" rx="1.05" fill="${c}"/>
 
-    <path d="M11.6 11.6 L6.6 6.4 h-1.8 L8.6 11.6 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
-    <path d="M11.6 12.4 L6.6 17.6 h-1.8 L8.6 12.4 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
+    <path d="M11.6 11.6 L6.6 6.4 h-1.8 L8.6 11.6 z" fill="${c}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
+    <path d="M11.6 12.4 L6.6 17.6 h-1.8 L8.6 12.4 z" fill="${c}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
 
     <path d="M41 12 c-.3 -1.2 -2.5 -2.3 -4.5 -2.6 L9.4 9.2 c-2.3 .1 -3.6 1.3 -3.6 2.8 c0 1.5 1.3 2.7 3.6 2.8 l27.1 -.2 c2 -.3 4.2 -1.4 4.5 -2.6 z"
       fill="${BODY}" stroke="${EDGE}" stroke-width=".8" stroke-linejoin="round"/>
-    <path d="M6 12 h32" stroke="${c}" stroke-width="1.1" opacity=".85"/>
-    <path d="M37.4 10.4 c1.4 .3 2.4 .9 2.8 1.6 c-.4 .7 -1.4 1.3 -2.8 1.6 z" fill="#2c3145"/>`);
+    <path d="M6 12 h32" stroke="${c}" stroke-width="1.6"/>
+    <path d="M37.4 10.4 c1.4 .3 2.4 .9 2.8 1.6 c-.4 .7 -1.4 1.3 -2.8 1.6 z" fill="${INK}"/>`);
 }
 
 export const ICON = {

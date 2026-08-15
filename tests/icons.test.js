@@ -85,9 +85,16 @@ describe('planeIcon', () => {
     expect(svg).toContain('M11.6 11.6 L6.6 6.4');   // 尾翼跨度 5，機翼 13.4
   });
 
-  it('可自訂顏色，預設為設計 token 的航班色', () => {
-    expect(planeIcon(40)).toContain('#5c9ecf');
+  it('白機身配橘色，預設橘取自設計 token 的 --drive', () => {
+    expect(planeIcon(40)).toContain('#f4622e');
+    expect(planeIcon(40)).toContain('#ffffff');
     expect(planeIcon(40, '#123456')).toContain('#123456');
+  });
+
+  it('尾翼與引擎整片填橘——40px 下只剩白機身與橘色塊的對比看得出來', () => {
+    const svg = planeIcon(40);
+    expect(svg).toContain('M11.6 11.6 L6.6 6.4 h-1.8 L8.6 11.6 z" fill="#f4622e"');
+    expect(svg).toContain('rect x="18.2" y="5.6" width="4.8" height="2.1" rx="1.05" fill="#f4622e"');
   });
 
   it('不畫車輪、不套用列車的速度殘影', () => {
