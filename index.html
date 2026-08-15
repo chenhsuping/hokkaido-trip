@@ -130,9 +130,24 @@ section{padding:64px 0}
   padding:3px 11px;font-size:10.5px;letter-spacing:.08em;font-weight:500;margin-bottom:8px}
 .rcard h4{font-family:"Zen Maru Gothic";font-size:15px;font-weight:700;letter-spacing:.02em;margin:0 0 4px}
 .rcard .mt{font-size:10px;letter-spacing:.08em;color:var(--ink-3)}
-/* 一列三張，依日期時間由左而右排。固定三欄而非 auto-fill：
-   自動填滿會隨視窗寬度變成四、五欄，一列幾張看心情，讀起來沒有節奏。 */
-.eats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+/* 牌卡軌道：一整排橫向排開，一次露出三張，其餘左右滑動。
+   全部攤成好幾列會把頁面拉得很長，但這兩區是「翻著看」的內容，不是要一眼
+   讀完的清單——收成一條軌道，捲動的節奏就回到使用者手上。
+
+   grid-auto-flow:column 讓卡片一律往右長；欄寬扣掉兩道間距後三等分，
+   所以剛好三張滿版。scroll-snap 讓每次滑動停在卡片邊緣而不是切一半。 */
+.rail{display:grid;grid-auto-flow:column;gap:18px;
+  grid-auto-columns:calc((100% - 2 * 18px) / 3);
+  overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;
+  padding-bottom:14px}
+.rail > *{scroll-snap-align:start}
+.rail::-webkit-scrollbar{height:8px}
+.rail::-webkit-scrollbar-track{background:rgba(43,39,33,.06);border-radius:99px}
+.rail::-webkit-scrollbar-thumb{background:rgba(43,39,33,.22);border-radius:99px}
+.rail::-webkit-scrollbar-thumb:hover{background:rgba(43,39,33,.34)}
+@media(max-width:1080px){.rail{grid-auto-columns:calc((100% - 18px) / 2)}}
+@media(max-width:620px){.rail{grid-auto-columns:86%}}
 .eat{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;
   box-shadow:0 1px 1px rgba(43,39,33,.03),0 16px 28px -28px rgba(43,39,33,.6)}
 .eat .ph{aspect-ratio:4/3;background:#f4ece0}
@@ -144,12 +159,6 @@ section{padding:64px 0}
 .eat .rz{font-size:9.5px;letter-spacing:.08em;font-weight:500;margin-top:5px}
 .eat .rz.yes{color:#0d7a58}
 .eat .rz.no{color:#c2451c}
-@media(max-width:1080px){.eats{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.eats{grid-template-columns:1fr}}
-
-.stays{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-@media(max-width:1080px){.stays{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.stays{grid-template-columns:1fr}}
 .stay{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
   display:flex;flex-direction:column;box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);
   transition:transform .25s}
@@ -249,8 +258,8 @@ section{padding:64px 0}
     <ul id="navlinks">
       <li><a href="#overview">總覽</a></li>
       <li><a href="#days">逐日行程</a></li>
-      <li><a href="#food">吃什麼</a></li>
       <li><a href="#stay">住哪裡</a></li>
+      <li><a href="#food">吃什麼</a></li>
       <li><a href="#cost">花多少</a></li>
       <li><a href="#prep">行前準備</a></li>
     </ul>
@@ -289,15 +298,17 @@ section{padding:64px 0}
     <div id="cards"></div>
   </section>
 
-  <section id="food">
-    <div class="shead"><div class="cap">What to eat</div><h2>吃什麼</h2></div>
-    <div id="ramenblock"></div>
-    <div id="eatsgrid" class="eats"></div>
+  <section id="stay">
+    <div class="shead"><div class="cap">Where to stay</div><h2>住哪裡</h2>
+      <p>左右滑動看完整趟的住宿。</p></div>
+    <div id="staysgrid" class="rail"></div>
   </section>
 
-  <section id="stay">
-    <div class="shead"><div class="cap">Where to stay</div><h2>住哪裡</h2></div>
-    <div id="staysgrid" class="stays"></div>
+  <section id="food">
+    <div class="shead"><div class="cap">What to eat</div><h2>吃什麼</h2>
+      <p>依日期與餐別排序，左右滑動看每一餐。</p></div>
+    <div id="ramenblock"></div>
+    <div id="eatsgrid" class="rail"></div>
   </section>
 
   <section id="cost">

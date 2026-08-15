@@ -11,6 +11,7 @@ import { parseDining, ramenTrio } from './dining.js';
 import { buildLodging } from './lodging.js';
 import { addLodgingBookends } from './bookend.js';
 import { addOpeningFlight } from './opening.js';
+import { addRopewayBaseStations } from './ropeway.js';
 import { summarizeBudget } from './budget.js';
 import { RATE } from '../config.js';
 import { summarizePrep } from './prep.js';
@@ -63,8 +64,12 @@ async function start() {
     todoRows: todoTab.ok ? todoTab.rows : [],
     tripStart: TRIP_START, tripEnd: TRIP_END,
   });
-  // 再往前補上桃園→新千歲那段航程，當作 Day 1 的開場
-  const days = addOpeningFlight(addLodgingBookends(buildItinerary(itineraryTab.rows), stays));
+  // 行程頁籤只記了要去的地方，實際會發生的移動要補回來：
+  const days = [
+    addRopewayBaseStations,                    // 纜車段先步行到山麓站再上山
+    d => addLodgingBookends(d, stays),         // 每天從住宿出發、回到住宿
+    addOpeningFlight,                          // Day 1 開頭的桃園→新千歲
+  ].reduce((d, step) => step(d), buildItinerary(itineraryTab.rows));
   const baseResolve = makeResolver(placesRes);
 
   const anomalies = findDateAnomalies(days.map(d => d.date), TRIP_START);

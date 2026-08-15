@@ -80,3 +80,29 @@ describe('makeRoadFetcher', () => {
     expect(maxInFlight).toBeLessThanOrEqual(2);
   });
 });
+
+describe('沒有道路可循的模式', () => {
+  const A = { lat: 41.7609, lng: 140.7142 };
+  const B = { lat: 41.7592, lng: 140.7049 };
+
+  it('纜車不查路由——foot 路徑是繞行的登山道，和纜車直上直下完全兩回事', async () => {
+    const fetchFn = vi.fn();
+    const { fetchRoad } = makeRoadFetcher({ fetchFn });
+    expect(await fetchRoad('ropeway', A, B)).toBeNull();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('航班不查路由——跨海沒有路可規劃', async () => {
+    const fetchFn = vi.fn();
+    const { fetchRoad } = makeRoadFetcher({ fetchFn });
+    expect(await fetchRoad('flight', { lat: 25.08, lng: 121.23 }, { lat: 42.78, lng: 141.69 })).toBeNull();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('其他模式照常查路由', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(okResponse([[140.71, 41.76], [140.70, 41.75]]));
+    const { fetchRoad } = makeRoadFetcher({ fetchFn });
+    expect(await fetchRoad('walk', A, B)).not.toBeNull();
+    expect(fetchFn).toHaveBeenCalledOnce();
+  });
+});
