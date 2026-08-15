@@ -31,7 +31,15 @@ export function createMap(el, { days, resolve: resolvePlace }) {
   };
 
   const roadFetcher = makeRoadFetcher();
+
+  // 兩個獨立的世代編號，不能共用：
+  //   playToken   — 播放世代。stopPlayback() 遞增，用來中止進行中的動畫。
+  //   renderToken — 顯示世代。切換顯示哪一天時才遞增，用來丟棄舊日期尚未回來的道路資料。
+  // 曾經共用一個：showDay() 捕捉當下的 playToken，緊接著 playDay() 又把它 +1，
+  // 導致 showDay 的道路資料回來時被自己判定為過期而放棄更新，線就永遠停在直線，
+  // 但載具照樣沿著同一份道路資料跑——畫面上線與圖示因此分離。
   let playToken = 0;
+  let renderToken = 0;
 
   function stopPlayback() {
     playToken += 1;
@@ -59,7 +67,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
   function showAll() {
     stopPlayback();
     clear();
-    const myToken = playToken;
+    const myRender = ++renderToken;
     const bounds = [];
     for (const [i, day] of days.entries()) {
       const color = DAY_COLORS[i % DAY_COLORS.length];
@@ -78,9 +86,9 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         const to = resolvePlace(day.spots[leg.toIndex].name);
         if (from && to) {
           roadFetcher.fetchRoad(leg.mode, from, to).then(road => {
-            if (myToken !== playToken) return;
-            // JR 沒有道路路徑（fetchRoad 回傳 null），退回與載具相同的平滑曲線，
-            // 兩者才會重合；直接留兩點直線的話圖示會偏離畫出來的線。
+            if (myRender !== renderToken) return;   // 使用者已切到別天，這份資料過期了
+            // 路由失敗時退回與載具相同的平滑曲線，兩者才會重合；
+            // 直接留兩點直線的話圖示會偏離畫出來的線。
             const path = road || smoothPath([from, to]);
             line.setLatLngs(path.map(p => L.latLng(p.lat, p.lng)));
           });
@@ -94,7 +102,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
     stopPlayback();
     clear();
     const day = days[index];
-    const myToken = playToken;
+    const myRender = ++renderToken;
     const bounds = [];
     for (const leg of day.legs) {
       const pts = legCoords(day, leg);
@@ -113,8 +121,9 @@ export function createMap(el, { days, resolve: resolvePlace }) {
       const to = resolvePlace(day.spots[leg.toIndex].name);
       if (from && to) {
         roadFetcher.fetchRoad(leg.mode, from, to).then(road => {
-          if (!road || myToken !== playToken) return;
-          line.setLatLngs(road.map(p => L.latLng(p.lat, p.lng)));
+          if (myRender !== renderToken) return;   // 使用者已切到別天，這份資料過期了
+          const path = road || smoothPath([from, to]);
+          line.setLatLngs(path.map(p => L.latLng(p.lat, p.lng)));
         });
       }
     }
