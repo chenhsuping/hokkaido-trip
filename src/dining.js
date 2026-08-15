@@ -23,21 +23,3 @@ export function parseDining(rows) {
   })).sort((a, b) =>
     a.date.localeCompare(b.date) || mealRank(a.meal) - mealRank(b.meal));
 }
-
-/**
- * 北海道拉麵三大天王：旭川醬油、函館鹽味、札幌味噌。
- * 流派來自 places.json 的 ramen 欄，不以店名或備註字串猜測。
- */
-export function ramenTrio(dishes, resolve) {
-  return dishes
-    .map(d => ({ dish: d, place: d.name ? resolve(d.name) : null }))
-    .filter(({ place }) => place?.ramen)
-    .map(({ dish, place }) => ({
-      flavor: place.ramen,
-      name: dish.name,
-      city: dish.city,
-      date: dish.date,
-      meal: dish.meal,
-      photo: place.photo,
-    }));
-}

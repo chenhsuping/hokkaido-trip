@@ -1,30 +1,3 @@
-/** 渲染當日景點卡片。地點為空者以「待定」呈現，不隱藏。 */
-export function renderCards(el, { day, resolve }) {
-  el.innerHTML = day.spots.map((s, i) => {
-    const p = s.name ? resolve(s.name) : null;
-    const img = p?.photo
-      ? `<img src="${p.photo}" alt="${s.name}" loading="lazy">`
-      : '';
-    const desc = p?.desc || s.activity || '';
-    return `<article class="card${s.pending ? ' pending' : ''}" data-index="${i}">
-      <div class="img">${img}</div>
-      <div class="body">
-        <span class="tag${s.stay ? ' stay' : ''}">${i + 1} · ${s.time}</span>
-        <h3>${s.name || '待定'}</h3>
-        <div class="kana">${s.activity}</div>
-        <p>${desc}</p>
-      </div>
-    </article>`;
-  }).join('');
-}
-
-/** 把第 index 張卡片標記為 active，其餘清除。index 為 null 時只清除。 */
-export function highlightCard(el, index) {
-  el.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
-  if (index == null) return;
-  el.querySelector(`.card[data-index="${index}"]`)?.classList.add('active');
-}
-
 /**
  * 自動連播：從 Day 1 開始逐日播放，播完最後一天回到 Day 1 循環。
  *

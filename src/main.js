@@ -4,10 +4,11 @@ import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
 import { createMap, DAY_COLORS } from './map.js';
 import { renderTimeline } from './timeline.js';
-import { renderCards, startAutoplay, highlightCard } from './cards.js';
+import { startAutoplay } from './cards.js';
 import { computeStats } from './overview.js';
 import { buildCities } from './cities.js';
-import { parseDining, ramenTrio } from './dining.js';
+import { buildSights } from './sights.js';
+import { parseDining } from './dining.js';
 import { buildLodging } from './lodging.js';
 import { addLodgingBookends } from './bookend.js';
 import { addOpeningFlight } from './opening.js';
@@ -118,63 +119,71 @@ async function start() {
     buildCities(days).map(c => c.name).join('　');
 
   const nt = n => 'NT$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const md = iso => iso.slice(5).replace('-', '/');
+
+  /** 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。 */
+  const pcard = ({ kind, tag, photo, city, name, dt, memo, foot }) => `
+    <article class="pcard ${kind}">
+      <div class="ph">${photo ? `<img src="${photo}" alt="${name}" loading="lazy">` : ''}
+        ${tag ? `<span class="tag">${tag}</span>` : ''}</div>
+      <div class="bd">
+        ${city ? `<div class="ct">${city}</div>` : ''}
+        <h3>${name}</h3>
+        ${dt ? `<div class="dt">${dt}</div>` : ''}
+        ${memo ? `<div class="memo">${memo}</div>` : ''}
+        ${foot ? `<div class="ft">${foot}</div>` : ''}
+      </div>
+    </article>`;
+
+  // stays 已在上方為了補每天頭尾而算好，直接沿用
+  document.getElementById('staysgrid').innerHTML = stays.map(s => pcard({
+    kind: 'stay',
+    tag: s.nights != null ? `${s.nights} 晚` : '',
+    photo: resolve(s.name)?.photo,
+    city: s.city,
+    name: s.name,
+    dt: s.checkinIso && s.checkoutIso
+      ? `${md(s.checkinIso)} — ${md(s.checkoutIso)}` : '日期待補',
+    memo: s.memo,
+    foot: `<div class="price${s.ntd ? '' : ' todo'}">${s.ntd ? nt(s.ntd) : '費用待補'}</div>
+      <span class="badge ${s.booked ? 'ok' : 'no'}">${s.booked ? '已訂房' : '未訂房'}</span>`,
+  })).join('');
 
   // 以下每個內容區塊各自等自己需要的頁籤，誰先到誰先渲染，互不阻塞。
   pending.dining.then(diningTab => {
-    const dishes = parseDining(diningTab.ok ? diningTab.rows : []);
-    const trio = ramenTrio(dishes, resolve);
-    const trioNames = new Set(trio.map(t => t.name));
+    const dishes = parseDining(diningTab.ok ? diningTab.rows : []).filter(d => d.name);
 
-    document.getElementById('ramenblock').innerHTML = trio.length ? `
-      <div class="ramen">
-        <div class="rh"><h3>北海道拉麵三大天王</h3><em>${trio.length}/3</em></div>
-        <div class="trio">${trio.map(t => `
-          <div class="rcard">
-            <div class="ph">${t.photo ? `<img src="${t.photo}" alt="${t.name}">` : ''}</div>
-            <div class="bd"><span class="ty">${t.flavor}</span><h4>${t.name}</h4>
-              <div class="mt">${t.city}　${t.date.slice(5).replace('-', '/')} ${t.meal}</div></div>
-          </div>`).join('')}
-        </div>
-      </div>` : '';
+    document.getElementById('eatsgrid').innerHTML = dishes.map(d => {
+      const place = resolve(d.name);
+      // 拉麵流派不再獨立成一個區塊，改成卡片上的一枚徽章，
+      // 資訊留著但不打斷這一區依日期排下來的節奏。
+      const flavor = place?.ramen ? `<span class="badge flavor">${place.ramen}拉麵</span>` : '';
+      const rz = d.reserved === null ? ''
+        : `<span class="badge ${d.reserved ? 'ok' : 'no'}">${d.reserved ? '已訂位' : '未訂位'}</span>`;
+      return pcard({
+        kind: 'eat',
+        tag: d.meal,
+        photo: place?.photo,
+        city: d.city,
+        name: d.name,
+        dt: md(d.date),
+        memo: d.note,
+        foot: flavor || rz ? `${flavor}${rz}` : '',
+      });
+    }).join('');
 
-    document.getElementById('eatsgrid').innerHTML = dishes
-      .filter(d => d.name && !trioNames.has(d.name))
-      .map(d => {
-        const photo = resolve(d.name)?.photo;
-        const rz = d.reserved === null ? '' :
-          `<div class="rz ${d.reserved ? 'yes' : 'no'}">${d.reserved ? '已訂位' : '未訂位'}</div>`;
-        return `<article class="eat">
-          <div class="ph">${photo ? `<img src="${photo}" alt="${d.name}">` : ''}</div>
-          <div class="bd">
-            <div class="tg">${d.date.slice(5).replace('-', '/')} · ${d.meal}</div>
-            <h4>${d.name || '待定'}</h4>
-            <div class="mt">${d.city}　${d.note}</div>
-            ${rz}
-          </div>
-        </article>`;
-      }).join('');
+    // 逛哪裡要扣掉餐廳，所以得等用餐頁籤到齊才能算
+    const sights = buildSights({ days, diningNames: dishes.map(d => d.name) });
+    document.getElementById('seesgrid').innerHTML = sights.map(s => pcard({
+      kind: 'see',
+      tag: `Day ${s.dayIndex + 1}`,
+      photo: resolve(s.name)?.photo,
+      city: s.city,
+      name: s.name,
+      dt: `${md(s.date)}${s.time ? `　${s.time}` : ''}`,
+      memo: resolve(s.name)?.desc || s.activity,
+    })).join('');
   });
-  // stays 已在上方為了補每天頭尾而算好，直接沿用
-  document.getElementById('staysgrid').innerHTML = stays.map(s => {
-      const photo = resolve(s.name)?.photo;
-      const dt = s.checkinIso && s.checkoutIso
-        ? `${s.checkinIso.slice(5).replace('-', '/')} — ${s.checkoutIso.slice(5).replace('-', '/')}`
-        : '日期待補';
-      return `<article class="stay">
-        <div class="ph">${photo ? `<img src="${photo}" alt="${s.name}">` : ''}
-          ${s.nights != null ? `<span class="nights">${s.nights} 晚</span>` : ''}</div>
-        <div class="bd">
-          <div class="ct">${s.city}</div>
-          <h3>${s.name}</h3>
-          <div class="dt">${dt}</div>
-          <div class="memo">${s.memo}</div>
-          <div class="ft">
-            <div class="price${s.ntd ? '' : ' todo'}">${s.ntd ? nt(s.ntd) : '費用待補'}</div>
-            <span class="badge ${s.booked ? 'ok' : 'no'}">${s.booked ? '已訂房' : '未訂房'}</span>
-          </div>
-        </div>
-      </article>`;
-  }).join('');
 
   pending.budget.then(budgetTab => {
     const CAT_COLOR = { 交通: '#0e7ad4', 住宿: '#7a5cc4', 餐飲: '#f4622e', 生活: '#12a97a' };
@@ -222,7 +231,6 @@ async function start() {
   });
 
   const mapApi = createMap(document.getElementById('map'), { days, resolve });
-  const cardsEl = document.getElementById('cards');
   let autoplay = null;
   let userPicked = false;
 
@@ -231,14 +239,10 @@ async function start() {
     onSelect: index => {
       if (index === null) {
         mapApi.showAll();
-        cardsEl.innerHTML = '';
         return Promise.resolve();
       }
       mapApi.showDay(index);
-      renderCards(cardsEl, { day: days[index], resolve });
-      return mapApi.playDay(index, {
-        onArrive: spotIndex => highlightCard(cardsEl, spotIndex),
-      });
+      return mapApi.playDay(index);
     },
   });
 
