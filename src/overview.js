@@ -15,6 +15,10 @@ export function haversineKm(a, b) {
  * 總移動距離為各 leg 兩端直線距離的累加，非實際里程，畫面應標示「約」。
  * 城市數透過 buildCities 取得，套用與五座城市區塊相同的分區對照——
  * 不能直接數 spot.city 的相異字串，否則「虻田郡」「有珠郡」會被誤算成兩個城市。
+ *
+ * 開場的桃園→新千歲航段不列入統計：這裡要回答的是「在北海道跑了多遠、
+ * 去了幾個地方」，把近 3000 公里的國際航段加進去會讓島內的移動距離
+ * 完全失去意義。
  */
 export function computeStats({ days, resolve, tripStart, tripEnd }) {
   const spotNames = new Set();
@@ -22,9 +26,10 @@ export function computeStats({ days, resolve, tripStart, tripEnd }) {
 
   for (const day of days) {
     for (const spot of day.spots) {
-      if (spot.name) spotNames.add(spot.name);
+      if (spot.name && !spot.opening) spotNames.add(spot.name);
     }
     for (const leg of day.legs) {
+      if (leg.opening) continue;
       const a = resolve(day.spots[leg.fromIndex]?.name);
       const b = resolve(day.spots[leg.toIndex]?.name);
       if (a && b) totalKm += haversineKm(a, b);

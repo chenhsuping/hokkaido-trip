@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseDate, compareDates, monthDay, matchByDate, findDateAnomalies, inferYear, diffDays, daysBetweenInclusive } from '../src/dates.js';
+import { parseDate, compareDates, monthDay, matchByDate, findDateAnomalies, inferYear, diffDays, daysBetweenInclusive, addDays } from '../src/dates.js';
 
 describe('parseDate', () => {
   it('解析 ISO 日期', () => {
@@ -104,5 +104,26 @@ describe('daysBetweenInclusive', () => {
 
   it('單日行程為 1', () => {
     expect(daysBetweenInclusive('2026-12-25', '2026-12-25')).toBe(1);
+  });
+});
+
+describe('addDays', () => {
+  it('同月內加減', () => {
+    expect(addDays('2026-12-25', 1)).toBe('2026-12-26');
+    expect(addDays('2026-12-25', -1)).toBe('2026-12-24');
+  });
+
+  it('跨月', () => {
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2026-11-30', 1)).toBe('2026-12-01');
+  });
+
+  it('跨年——這趟行程正好跨年，算錯會讓住宿對不上日期', () => {
+    expect(addDays('2027-01-02', 1)).toBe('2027-01-03');
+    expect(addDays('2026-12-30', 4)).toBe('2027-01-03');
+  });
+
+  it('無法解析的日期回傳 null', () => {
+    expect(addDays('', 1)).toBeNull();
   });
 });

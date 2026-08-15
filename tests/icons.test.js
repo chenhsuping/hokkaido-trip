@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { trainIcon, carIcon, busIcon, walkIcon, tramIcon, ICON } from '../src/icons.js';
+import { trainIcon, carIcon, busIcon, walkIcon, tramIcon, planeIcon, ICON } from '../src/icons.js';
 
 describe('icon generators', () => {
   it('每個圖示都回傳有效的 svg 字串', () => {
@@ -28,11 +28,13 @@ describe('icon generators', () => {
 });
 
 describe('ICON registry', () => {
-  it('涵蓋六種交通模式，市電與纜車各有專屬圖示而非沿用腳印', () => {
-    expect(Object.keys(ICON).sort()).toEqual(['bus', 'drive', 'jr', 'ropeway', 'tram', 'walk']);
+  it('涵蓋七種交通模式，市電、纜車與飛機各有專屬圖示而非沿用腳印', () => {
+    expect(Object.keys(ICON).sort())
+      .toEqual(['bus', 'drive', 'flight', 'jr', 'ropeway', 'tram', 'walk']);
     expect(ICON.tram).toBe(tramIcon);
     expect(ICON.tram).not.toBe(ICON.walk);
     expect(ICON.ropeway).not.toBe(ICON.walk);
+    expect(ICON.flight).toBe(planeIcon);
   });
 
   it('每個登記的產生器都是函式', () => {
@@ -67,5 +69,28 @@ describe('tramIcon', () => {
   it('可自訂顏色，預設為設計 token 的市電色', () => {
     expect(tramIcon(40)).toContain('#f0ad2a');
     expect(tramIcon(40, '#123456')).toContain('#123456');
+  });
+});
+
+describe('planeIcon', () => {
+  it('機翼後掠——翼尖在翼根後方，這是判讀朝向的主要線索', () => {
+    // 兩片機翼的路徑都從翼根 x=27 往後（x 變小）畫到翼尖
+    const svg = planeIcon(40);
+    expect(svg).toContain('M27 11.5 L13.6 2.4');
+    expect(svg).toContain('M27 12.5 L13.6 21.6');
+  });
+
+  it('尾翼比機翼短，兩者大小差異讓人看得出哪邊是機首', () => {
+    const svg = planeIcon(40);
+    expect(svg).toContain('M11.6 11.6 L6.6 6.4');   // 尾翼跨度 5，機翼 13.4
+  });
+
+  it('可自訂顏色，預設為設計 token 的航班色', () => {
+    expect(planeIcon(40)).toContain('#5c9ecf');
+    expect(planeIcon(40, '#123456')).toContain('#123456');
+  });
+
+  it('不畫車輪、不套用列車的速度殘影', () => {
+    expect(planeIcon(40)).not.toContain('trainBody');
   });
 });

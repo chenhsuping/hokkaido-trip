@@ -6,6 +6,7 @@ export const CITY_MAP = {
   '函館市': '函館',
   '札幌市': '札幌',
   '千歲市': null,
+  '桃園市': null,      // 開場航段的出發機場，不算這趟旅行造訪的城市
 };
 
 export function canonicalCity(raw) {

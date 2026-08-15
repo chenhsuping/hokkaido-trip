@@ -44,7 +44,7 @@ describe('buildLodging', () => {
     expect(stays[0].fromLodgingTab).toBe(true);
   });
 
-  it('住宿頁籤缺漏時由待辦清單補上日期區間與訂房狀態', () => {
+  it('待辦清單括號內是住哪幾晚，退房日為最後一晚的隔天', () => {
     const stays = buildLodging({
       lodgingRows: [lodgingRow(), lodgingRow({ 飯店名稱: '' }), lodgingRow({ 飯店名稱: '' })],
       todoRows: [
@@ -55,8 +55,8 @@ describe('buildLodging', () => {
     const hakodate = stays.find(s => s.city === '函館');
     expect(hakodate).toBeDefined();
     expect(hakodate.checkinIso).toBe('2026-12-28');
-    expect(hakodate.checkoutIso).toBe('2026-12-30');
-    expect(hakodate.nights).toBe(2);
+    expect(hakodate.checkoutIso).toBe('2026-12-31');   // 住 28、29、30 三晚，隔天退房
+    expect(hakodate.nights).toBe(3);
     expect(hakodate.booked).toBe(true);
     expect(hakodate.ntd).toBeNull();
     expect(hakodate.fromLodgingTab).toBe(false);
@@ -70,7 +70,20 @@ describe('buildLodging', () => {
     });
     const sapporo = stays.find(s => s.city === '札幌');
     expect(sapporo.checkinIso).toBe('2026-12-31');
-    expect(sapporo.checkoutIso).toBe('2027-01-02');
+    expect(sapporo.checkoutIso).toBe('2027-01-03');   // 住 31、1、2 三晚，1/3 退房返台
+    expect(sapporo.nights).toBe(3);
+  });
+
+  it('括號只有單一日期時算住一晚', () => {
+    const stays = buildLodging({
+      lodgingRows: [lodgingRow({ 飯店名稱: '' })],
+      todoRows: [todoRow({ 項目名稱: '住宿旅館-小樽 (12/26)', 已完成: 'TRUE' })],
+      tripStart: '2026-12-25', tripEnd: '2027-01-03',
+    });
+    const otaru = stays.find(s => s.city === '小樽');
+    expect(otaru.checkinIso).toBe('2026-12-26');
+    expect(otaru.checkoutIso).toBe('2026-12-27');
+    expect(otaru.nights).toBe(1);
   });
 
   it('待辦清單也找不到對應項目時仍產生卡片，日期為 null', () => {

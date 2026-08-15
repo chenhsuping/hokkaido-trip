@@ -147,7 +147,40 @@ export function ropewayIcon(s, c) {
     <rect x="13" y="16.4" width="18" height="1.6" fill="${c}" opacity=".9"/>`);
 }
 
+/**
+ * 客機：俯視角，機首朝右。
+ *
+ * 其他載具都是側視圖，飛機刻意改成俯視——這段是在整片海上飛，鏡頭拉到
+ * 能同時看見台灣與北海道的高度，側視的飛機在那個尺度下看起來像貼在海面上。
+ * 俯視加上 heading 旋轉，才像是在地圖上飛越海峽。
+ *
+ * 機翼後掠（翼根在前、翼尖在後）是判讀朝向的主要線索，尾翼比機翼小一半，
+ * 兩者的大小差異讓人一眼看出哪邊是機首。
+ */
+export function planeIcon(s, c) {
+  c = c || '#5c9ecf';
+  const sz = s * 0.72;
+  const BODY = '#f7f8fa', EDGE = '#9aa3b0';
+  return wide(sz,
+    `<line x1="0" y1="9.4" x2="6" y2="10" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+    <line x1="0" y1="14.6" x2="6" y2="14" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+
+    <path d="M27 11.5 L13.6 2.4 h-3.1 L18.2 11.5 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
+    <path d="M27 12.5 L13.6 21.6 h-3.1 L18.2 12.5 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
+    <rect x="18.2" y="5.6" width="4.8" height="2.1" rx="1.05" fill="#cdd4de" stroke="${EDGE}" stroke-width=".6"/>
+    <rect x="18.2" y="16.3" width="4.8" height="2.1" rx="1.05" fill="#cdd4de" stroke="${EDGE}" stroke-width=".6"/>
+
+    <path d="M11.6 11.6 L6.6 6.4 h-1.8 L8.6 11.6 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
+    <path d="M11.6 12.4 L6.6 17.6 h-1.8 L8.6 12.4 z" fill="${BODY}" stroke="${EDGE}" stroke-width=".7" stroke-linejoin="round"/>
+
+    <path d="M41 12 c-.3 -1.2 -2.5 -2.3 -4.5 -2.6 L9.4 9.2 c-2.3 .1 -3.6 1.3 -3.6 2.8 c0 1.5 1.3 2.7 3.6 2.8 l27.1 -.2 c2 -.3 4.2 -1.4 4.5 -2.6 z"
+      fill="${BODY}" stroke="${EDGE}" stroke-width=".8" stroke-linejoin="round"/>
+    <path d="M6 12 h32" stroke="${c}" stroke-width="1.1" opacity=".85"/>
+    <path d="M37.4 10.4 c1.4 .3 2.4 .9 2.8 1.6 c-.4 .7 -1.4 1.3 -2.8 1.6 z" fill="#2c3145"/>`);
+}
+
 export const ICON = {
   jr: trainIcon, drive: carIcon, bus: busIcon,
   walk: walkIcon, tram: tramIcon, ropeway: ropewayIcon,
+  flight: planeIcon,
 };

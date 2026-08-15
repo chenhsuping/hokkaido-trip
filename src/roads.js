@@ -5,6 +5,13 @@
  */
 const PROFILE = { jr: 'driving', drive: 'driving', bus: 'driving', walk: 'foot', tram: 'foot' };
 
+/**
+ * 沒有道路可循的模式，直接回傳 null 讓呼叫端自己畫線，不必浪費一次請求：
+ * 飛機走天空（跨海根本無路可規劃），纜車走纜索（山路的 foot 路徑是繞行的
+ * 登山道，與纜車直上直下的路徑完全是兩回事）。
+ */
+const NO_ROAD = new Set(['flight', 'ropeway']);
+
 /** OSRM demo 道路路徑抓取。失敗一律回傳 null，退路交給呼叫端決定。 */
 export function makeRoadFetcher({ fetchFn = fetch, maxConcurrent = 3 } = {}) {
   const cache = new Map();
@@ -31,6 +38,7 @@ export function makeRoadFetcher({ fetchFn = fetch, maxConcurrent = 3 } = {}) {
 
   return {
     async fetchRoad(mode, from, to) {
+      if (NO_ROAD.has(mode)) return null;
       const profile = PROFILE[mode] || 'driving';
       const key = `${profile}:${from.lat},${from.lng}:${to.lat},${to.lng}`;
       if (cache.has(key)) return cache.get(key);

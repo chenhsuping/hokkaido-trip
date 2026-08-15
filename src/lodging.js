@@ -1,4 +1,4 @@
-import { parseDate, diffDays, inferYear } from './dates.js';
+import { parseDate, diffDays, inferYear, addDays } from './dates.js';
 import { CITY_MAP } from './cities.js';
 
 const RANGE_RE = /\((\d{1,2})\/(\d{1,2})\s*(?:~|-|至)\s*(\d{1,2})\/(\d{1,2})\)/;
@@ -64,7 +64,14 @@ export function buildLodging({ lodgingRows, todoRows, tripStart, tripEnd }) {
       if (!cityLabel || coveredCities.has(cityLabel)) return null;
       const range = extractDateRange(r['項目名稱']);
       const checkinIso = toIso(range?.checkin, tripStart, tripEnd);
-      const checkoutIso = toIso(range?.checkout, tripStart, tripEnd);
+      // 括號裡是「住哪幾晚」，不是入住～退房：
+      //   旭川 (12/25)          住 25 一晚      → 12/26 退房（與住宿頁籤填的一致）
+      //   函館 (12/28 ~ 12/30)  住 28、29、30   → 12/31 退房
+      //   札幌 (12/31 ~ 01/02)  住 31、1、2     → 01/03 退房
+      // 曾按字面當成入住～退房，結果 12/30 與 1/2 兩晚沒人認領，
+      // 那兩天的行程頭尾就補不出住宿——剛好就是這個讀法補上的兩晚。
+      const lastNight = toIso(range?.checkout ?? range?.checkin, tripStart, tripEnd);
+      const checkoutIso = lastNight ? addDays(lastNight, 1) : null;
       return {
         name: cityLabel,
         city: cityLabel,

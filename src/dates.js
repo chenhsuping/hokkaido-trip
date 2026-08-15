@@ -63,3 +63,11 @@ export function diffDays(aIso, bIso) {
 export function daysBetweenInclusive(startIso, endIso) {
   return diffDays(startIso, endIso) + 1;
 }
+
+/** 日期加減天數，跨月與跨年由 Date.UTC 處理。 */
+export function addDays(iso, n) {
+  const a = parseDate(iso);
+  if (!a) return null;
+  const d = new Date(Date.UTC(a.y, a.m - 1, a.d + n));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}

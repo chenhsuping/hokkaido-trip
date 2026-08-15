@@ -80,6 +80,36 @@ describe('addLodgingBookends', () => {
     expect(out[0].spots.at(-1).name).toBe('Nord 小樽飯店');
   });
 
+  it('連住兩晚時，中間那天的頭尾也要補上同一間', () => {
+    // 函館 12/28 入住、12/30 退房 —— 12/29 那晚仍然住在這裡
+    const twoNight = [{ name: '函館', city: '函館', checkinIso: '2026-12-28', checkoutIso: '2026-12-30' }];
+    const days = [
+      day('2026-12-28', [spot({ name: '金森倉庫群' })]),
+      day('2026-12-29', [spot({ name: '函館山纜車' })]),
+    ];
+    const out = addLodgingBookends(days, twoNight);
+    expect(out[1].spots[0].name).toBe('函館');       // 早上從函館出發
+    expect(out[1].spots.at(-1).name).toBe('函館');   // 晚上回到函館
+  });
+
+  it('退房當天不再算作住在那裡', () => {
+    const twoNight = [{ name: '函館', city: '函館', checkinIso: '2026-12-28', checkoutIso: '2026-12-30' }];
+    const days = [day('2026-12-30', [spot({ name: '五稜郭公園' })])];
+    const out = addLodgingBookends(days, twoNight);
+    expect(out[0].spots.at(-1).name).toBe('五稜郭公園');
+  });
+
+  it('退房日未填時只認入住當晚，不把後面每一晚都算成同一間', () => {
+    const openEnded = [{ name: '某旅館', city: '札幌', checkinIso: '2026-12-25', checkoutIso: null }];
+    const days = [
+      day('2026-12-25', [spot({ name: 'A' })]),
+      day('2026-12-26', [spot({ name: 'B' })]),
+    ];
+    const out = addLodgingBookends(days, openEnded);
+    expect(out[0].spots.at(-1).name).toBe('某旅館');
+    expect(out[1].spots.at(-1).name).toBe('B');
+  });
+
   it('不改動原始 days 陣列', () => {
     const days = [day('2026-12-25', [spot({ name: 'A' })])];
     const before = days[0].spots.length;

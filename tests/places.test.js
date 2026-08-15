@@ -70,15 +70,26 @@ describe('places.json', () => {
     expect(resolve('大通公園、札幌電視塔')).not.toBeNull();
   });
 
+  // 唯一不在北海道的座標：開場航段的出發機場。逐一列名而非放寬範圍，
+  // 這個框才留得住原本的作用——抓出地理編碼查錯地方的座標。
+  const OUTSIDE_HOKKAIDO = new Set(['桃園國際機場']);
+
   it('每個項目都有有效的北海道座標', () => {
     for (const [name, p] of Object.entries(places)) {
       expect(typeof p.lat, name).toBe('number');
       expect(typeof p.lng, name).toBe('number');
+      if (OUTSIDE_HOKKAIDO.has(name)) continue;
       expect(p.lat, name).toBeGreaterThan(41);
       expect(p.lat, name).toBeLessThan(46);
       expect(p.lng, name).toBeGreaterThan(139);
       expect(p.lng, name).toBeLessThan(146);
     }
+  });
+
+  it('桃園國際機場座標落在台灣', () => {
+    const p = places['桃園國際機場'];
+    expect(p.lat).toBeCloseTo(25.08, 1);
+    expect(p.lng).toBeCloseTo(121.23, 1);
   });
 
   it('三家拉麵店標記了流派', () => {
