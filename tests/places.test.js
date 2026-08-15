@@ -59,8 +59,12 @@ describe('places.json', () => {
     expect(missing).toEqual([]);
   });
 
-  it('刻意未涵蓋的新地點交由地理編碼處理', () => {
-    expect(resolve('Co-op Sapporo Suehiro-Nishi-ten')).toBeNull();
+  it('Co-op 末広店座標來自使用者提供的地址，不再倚賴地理編碼', () => {
+    // 17-13 Suehirocho, Hakodate 040-0053 → コープさっぽろ 末広町
+    const p = resolve('Co-op Sapporo Suehiro-Nishi-ten');
+    expect(p).not.toBeNull();
+    expect(p.lat).toBeCloseTo(41.7644, 3);
+    expect(p.lng).toBeCloseTo(140.7156, 3);
   });
 
   it('舊試算表命名可透過別名解析', () => {

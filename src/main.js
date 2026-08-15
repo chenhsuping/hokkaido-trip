@@ -2,7 +2,7 @@ import { fetchTabsIndividually } from './sheets.js';
 import { buildItinerary } from './itinerary.js';
 import { makeResolver } from './places.js';
 import { makeGeocoder } from './geocode.js';
-import { createMap, DAY_COLORS } from './map.js';
+import { createMap } from './map.js';
 import { renderTimeline } from './timeline.js';
 import { startAutoplay } from './cards.js';
 import { computeStats } from './overview.js';
@@ -109,10 +109,7 @@ async function start() {
       <div class="stat"><div class="v">${stats.cityCount}<small>座</small></div><div class="k">停留城市</div></div>
       <div class="stat"><div class="v">${stats.spotCount}<small>個</small></div><div class="k">造訪地點</div></div>
       <div class="stat"><div class="v">約 ${Math.round(stats.totalKm)}<small>km</small></div><div class="k">總移動距離</div></div>
-    </div>
-    <div class="daykey">${days.map((d, i) =>
-      `<b><i style="background:${DAY_COLORS[i % DAY_COLORS.length]}"></i>${d.date.iso.slice(5).replace('-', '/')}　${d.city}</b>`
-    ).join('')}</div>`;
+    </div>`;
 
   // buildCities 仍用於封面的城市列與總覽的城市數統計（「五座城市」區塊已移除）
   document.getElementById('herocities').textContent =

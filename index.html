@@ -91,10 +91,6 @@ section{padding:64px 0}
 .stat .v{font-family:"Zen Maru Gothic";font-weight:700;font-size:30px;letter-spacing:.02em;line-height:1}
 .stat .v small{font-size:14px;font-weight:500;margin-left:3px;color:var(--ink-2)}
 .stat .k{font-size:10.5px;letter-spacing:.14em;color:var(--ink-3);margin-top:8px}
-.daykey{display:flex;flex-wrap:wrap;gap:9px}
-.daykey b{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--line);
-  border-radius:99px;padding:6px 14px;font-size:11px;font-weight:500;letter-spacing:.05em}
-.daykey i{width:18px;height:2.5px;border-radius:2px;display:block}
 @media(max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stats{grid-template-columns:1fr}}
 
@@ -222,8 +218,8 @@ section{padding:64px 0}
       <li><a href="#overview">總覽</a></li>
       <li><a href="#days">逐日行程</a></li>
       <li><a href="#stay">住哪裡</a></li>
-      <li><a href="#food">吃什麼</a></li>
       <li><a href="#see">逛哪裡</a></li>
+      <li><a href="#food">吃什麼</a></li>
       <li><a href="#cost">花多少</a></li>
       <li><a href="#prep">行前準備</a></li>
     </ul>
@@ -267,16 +263,16 @@ section{padding:64px 0}
     <div id="staysgrid" class="rail"></div>
   </section>
 
-  <section id="food">
-    <div class="shead"><div class="cap">What to eat</div><h2>吃什麼</h2>
-      <p>依日期與餐別排序，左右滑動看每一餐。</p></div>
-    <div id="eatsgrid" class="rail"></div>
-  </section>
-
   <section id="see">
     <div class="shead"><div class="cap">Where to go</div><h2>逛哪裡</h2>
       <p>住宿與用餐以外的地方，依造訪順序排列。</p></div>
     <div id="seesgrid" class="rail"></div>
+  </section>
+
+  <section id="food">
+    <div class="shead"><div class="cap">What to eat</div><h2>吃什麼</h2>
+      <p>依日期與餐別排序，左右滑動看每一餐。</p></div>
+    <div id="eatsgrid" class="rail"></div>
   </section>
 
   <section id="cost">
