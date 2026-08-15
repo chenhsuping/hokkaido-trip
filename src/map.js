@@ -2,7 +2,7 @@ import { latLng } from './places.js';
 import { MODE_COLORS } from './transport.js';
 import { ICON } from './icons.js';
 import { smoothPath } from './curve.js';
-import { computeHeading } from './heading.js';
+import { computeHeading, computeTrackHeading } from './heading.js';
 import { makeRoadFetcher } from './roads.js';
 
 /**
@@ -169,10 +169,15 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         icon: vehIcon(legsWithCoords[0].leg.mode), interactive: false, zIndexOffset: -100,
       }).addTo(layers.veh);
 
-      function applyHeadingToMarker(dx, dy) {
+      /**
+       * 更新車頭朝向。列車用 computeTrackHeading（不限傾角，車頭真的指向前進方向）；
+       * 其餘交通工具沿用 computeHeading 的 ±20 度限制，避免圖示過度傾斜難以辨識。
+       */
+      function applyHeadingToMarker(dx, dy, mode) {
         const elCore = vehMarker.getElement()?.querySelector('.core');
         if (!elCore) return;
-        const { angle, flip } = computeHeading(dx, dy, headFlip);
+        const fn = mode === 'jr' ? computeTrackHeading : computeHeading;
+        const { angle, flip } = fn(dx, dy, headFlip);
         headFlip = flip;
         elCore.style.transform = `rotate(${angle.toFixed(1)}deg) scaleX(${flip})`;
       }
@@ -202,7 +207,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
 
         const fromLL = toLatLng(from), toLL = toLatLng(to);
         const fromPt = map.latLngToContainerPoint(fromLL), toPt = map.latLngToContainerPoint(toLL);
-        applyHeadingToMarker(toPt.x - fromPt.x, toPt.y - fromPt.y);
+        applyHeadingToMarker(toPt.x - fromPt.x, toPt.y - fromPt.y, leg.mode);
 
         const legDistM = fromLL.distanceTo(toLL);
         if (legDistM < 30) { await step(k + 1); return; }
@@ -215,8 +220,16 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         // 前後拉近兩次（進站、出站），節奏很突兀。維持當下視野直接開過去。
         const arrivingAtTransfer = day.spots[leg.toIndex]?.transfer;
 
-        if (arrivingAtTransfer) {
-          // 不調整視野
+        // 長途 JR 移動先把鏡頭拉開，讓整段路線都在畫面內——否則會一路貼著
+        // 列車跑，只看得到腳下的一小塊地圖，感覺不出跨了多遠。
+        const isLongHaul = leg.mode === 'jr' && legDistM >= 16000;
+
+        if (arrivingAtTransfer && !isLongHaul) {
+          // 轉車站不調整視野
+        } else if (isLongHaul) {
+          map.flyToBounds(L.latLngBounds([fromLL, toLL]), {
+            padding: [80, 80], maxZoom: 9, duration: 1.2,
+          });
         } else if (legDistM < 2600) {
           const mid = L.latLng((fromLL.lat + toLL.lat) / 2, (fromLL.lng + toLL.lng) / 2);
           map.flyTo(mid, legDistM < 900 ? 16 : 15, { duration: 0.9 });
@@ -239,6 +252,8 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         // 那層的 transform 被 Leaflet 用來定位，每次 setLatLng() 都會覆寫掉。
         const vehEl = vehMarker.getElement()?.querySelector('.veh');
 
+        let lastHeadingIdx = -1;
+
         await new Promise(r => {
           function tick(now) {
             if (myToken !== playToken) { r(); return; }
@@ -247,6 +262,19 @@ export function createMap(el, { days, resolve: resolvePlace }) {
             const idx = Math.min(points.length - 1, Math.round(eased * (points.length - 1)));
             const here = points[idx];
             vehMarker.setLatLng(here);
+
+            // 沿途即時更新車頭方向。原本只在每段開始時算一次整段的起訖方向，
+            // 但路線是彎的，行進方向沿途一直在變，車頭因此貼不上實際走向。
+            // 取前方一小段的位移當作切線方向，位置沒變就不重算。
+            if (idx !== lastHeadingIdx) {
+              lastHeadingIdx = idx;
+              const ahead = points[Math.min(points.length - 1, idx + 2)];
+              if (ahead !== here) {
+                const a = map.latLngToContainerPoint(here);
+                const b = map.latLngToContainerPoint(ahead);
+                applyHeadingToMarker(b.x - a.x, b.y - a.y, leg.mode);
+              }
+            }
 
             // 行駛震動：疊在外層 .veh 上，不動內層 .core 的 rotate/scaleX
             // （那是 applyHeadingToMarker 在管方向的，覆寫會讓車頭轉錯邊）。
@@ -257,7 +285,8 @@ export function createMap(el, { days, resolve: resolvePlace }) {
               vehEl.style.transform = `translate(${bob.toFixed(2)}px, ${shake.toFixed(2)}px)`;
             }
 
-            if (now - lastPanAt > 260) {
+            // 長途已經拉開到整段可見，再跟著 pan 會把視野扯回列車腳下
+            if (!isLongHaul && now - lastPanAt > 260) {
               lastPanAt = now;
               const sz = map.getSize();
               const p = map.latLngToContainerPoint(here);

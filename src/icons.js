@@ -11,10 +11,11 @@ function wide(s, inner) {
  * 輪子只會變成車底一排看不出是什麼的黑點，反而干擾車身輪廓的辨識。
  * 速度感改由橘色殘影線 + map.js 的行駛震動負責。
  *
- * 縮到 0.82 倍：兩節車廂讓水平長度比原本單節長不少，不縮的話在地圖上會過於搶眼。
+ * 縮到 0.62 倍：兩節車廂讓水平長度比單節長不少，加上長途會把鏡頭拉遠，
+ * 圖示相對地圖顯得更大——縮小後比例才合理，也不會蓋住路線。
  */
 export function trainIcon(s) {
-  const size = s * 0.82;
+  const size = s * 0.62;
   return wide(size,
     `<defs>
       <linearGradient id="trainBody" x1="0" y1="0" x2="0" y2="1">
