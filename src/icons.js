@@ -3,23 +3,50 @@ function wide(s, inner) {
   return `<svg width="${s * 1.55}" height="${s}" viewBox="0 0 44 24" fill="none">${inner}</svg>`;
 }
 
+/**
+ * 高速列車圖示：流線車頭、灰白漸層車身、深色車窗帶、車尾拖出的橘色速度殘影、
+ * 會自轉的車輪——這些都是刻意的視覺線索，讓靜止的截圖也讀得出「正在高速行駛」。
+ * 車頭朝右（沿用 car/bus 圖示既有的朝向慣例），moves left→right 時不需翻面。
+ * 不做內部縮小：地圖上的載具只有 40px，車頭／車窗／殘影線這些細節再乘 0.7
+ * 就會糊成一個看不出形狀的深色小點（實測過）。bus 與 walk 造型單純才禁得起縮小。
+ */
 export function trainIcon(s) {
-  const D = '#22414d', T = '#6ecfc8';
-  return wide(s,
-    `<circle cx="8.6" cy="17.6" r="1.7" fill="${D}"/><circle cx="12" cy="17.6" r="1.7" fill="${D}"/>
-    <circle cx="15.4" cy="17.6" r="1.7" fill="${D}"/><circle cx="27.4" cy="17.6" r="1.7" fill="${D}"/>
-    <circle cx="30.8" cy="17.6" r="1.7" fill="${D}"/><circle cx="34.2" cy="17.6" r="1.7" fill="${D}"/>
-    <path d="M3.2 9.2c0-1.5 1.1-2.6 2.6-2.6h20.6c5.2 0 9.9 1.4 14 4.4 1.4 1 2 1.9 2 2.9 0 1.5-1.2 2.5-3 2.5H5.6c-1.5 0-2.4-1-2.4-2.4z" fill="#fff" stroke="${D}" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M6.6 8.8h21.6v4.6H6.6z" fill="${D}"/>
-    <rect x="13.2" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
-    <rect x="16.8" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
-    <rect x="20.4" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
-    <rect x="24" y="9.6" width="2.6" height="3" rx=".7" fill="${T}"/>
-    <rect x="8.2" y="8.4" width="3" height="5.4" rx=".8" fill="${T}"/>
-    <rect x="28.6" y="8.4" width="3" height="5.4" rx=".8" fill="${T}"/>
-    <path d="M33.4 9.6c2.4.8 4.4 1.9 6.2 3.2v.8h-6.2z" fill="${T}" stroke="${D}" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M4.4 14.2h36.4c.5.6.8 1.1.8 1.6 0 .3-.1.5-.2.8H4.6c-.2-.4-.2-.8-.2-1.2z" fill="${T}"/>
-    <path d="M3.2 14.2h38.6" stroke="${D}" stroke-width="1.1"/>`);
+  const size = s;
+  return wide(size,
+    `<defs>
+      <linearGradient id="trainBody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="58%" stop-color="#f4f5f7"/>
+        <stop offset="100%" stop-color="#d9dce2"/>
+      </linearGradient>
+    </defs>
+    <line x1="0" y1="8" x2="5.5" y2="7.4" stroke="#f0a02a" stroke-width="1.5" stroke-linecap="round" opacity=".9"/>
+    <line x1=".5" y1="11.5" x2="6" y2="11" stroke="#f5b451" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>
+    <line x1="1.5" y1="15" x2="6.5" y2="14.6" stroke="#f8c778" stroke-width="1.1" stroke-linecap="round" opacity=".6"/>
+    <path d="M7 4.5 h20 c7 0 12.5 2.5 15.5 6.2 c.6 .8 .6 1.6 0 2.4 c-.8 1 -2 1.4 -3.5 1.4 H7 c-1.4 0 -2.2 -.8 -2.2 -2 V6.5 c0 -1.2 .8 -2 2.2 -2 z"
+      fill="url(#trainBody)" stroke="#b9bec7" stroke-width=".7" stroke-linejoin="round"/>
+    <rect x="7.5" y="6.6" width="18" height="4.4" rx="1.2" fill="#2c3145"/>
+    <path d="M27.5 6.6 h1.8 c4.2 .6 7.6 2.4 10 4.4 h-11.8 z" fill="#2c3145"/>
+    <ellipse cx="36.5" cy="12.8" rx="2" ry="1.2" fill="#f5f6f8" opacity=".9"/>
+    <rect x="5.5" y="14.6" width="35" height="1.6" rx=".8" fill="#f0a02a" opacity=".9"/>
+    <g>
+      <circle cx="13" cy="18.2" r="3.1" fill="#262b33"/>
+      <circle cx="13" cy="18.2" r="1.7" fill="#6f7681"/>
+      <rect x="11.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33"/>
+      <rect x="11.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(60 13 18.2)"/>
+      <rect x="11.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(120 13 18.2)"/>
+      <circle cx="13" cy="18.2" r=".7" fill="#e9ebee"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 13 18.2" to="360 13 18.2" dur=".45s" repeatCount="indefinite"/>
+    </g>
+    <g>
+      <circle cx="27" cy="18.2" r="3.1" fill="#262b33"/>
+      <circle cx="27" cy="18.2" r="1.7" fill="#6f7681"/>
+      <rect x="25.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33"/>
+      <rect x="25.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(60 27 18.2)"/>
+      <rect x="25.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(120 27 18.2)"/>
+      <circle cx="27" cy="18.2" r=".7" fill="#e9ebee"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 27 18.2" to="360 27 18.2" dur=".45s" repeatCount="indefinite"/>
+    </g>`);
 }
 
 export function carIcon(s) {
