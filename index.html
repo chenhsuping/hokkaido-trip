@@ -79,12 +79,16 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif}
 .day .sp .s em{font-style:normal;flex:0 0 auto;font-size:9.5px;color:var(--ink-3);
   font-variant-numeric:tabular-nums}
 .day .sp .s span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:820px){#daylist{display:flex;overflow-x:auto;overflow-y:hidden}
-  .day{flex:0 0 auto;padding-left:14px;grid-template-columns:auto}
+/* 手機：日期列是橫向捲動的挑選列，一張張並排。地點改成疊在日期下方
+   （單欄），而不是像桌面那樣排在右邊——橫向空間在這裡最稀缺。
+   固定寬度讓每張卡對齊，卡片高度則由地點最多的那天決定，
+   各張一樣高，捲動時不會忽高忽低。 */
+@media(max-width:820px){#daylist{display:flex;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+  /* align-content:start 不可省。卡片被拉成等高後，格線的自動列會跟著撐開，
+     地點那一列就被推到卡片中段，日期和地點之間空一大塊。 */
+  .day{flex:0 0 auto;padding-left:14px;grid-template-columns:auto;width:232px;align-content:start}
   .day::before,.day::after{display:none}
-  /* 手機的日期列是橫向捲動的挑選列，塞進五行地點會把它撐成一大塊，
-     吃掉本來就只有 46vh 的地圖。地點在下面的牌卡區看得到。 */
-  .day .sp{display:none}}
+  .day .sp{padding-top:9px}}
 
 nav{position:sticky;top:0;z-index:1000;background:rgba(255,248,236,.86);
   backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
