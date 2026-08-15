@@ -20,6 +20,7 @@ export function buildItinerary(rows) {
     .map((group, index) => {
       const spots = group.rows.map(r => {
         const activity = r['活動內容'] || '';
+        const mins = parseInt(r['交通時間'], 10);
         return {
           name: r['地點'] || '',
           time: r['抵達時間'] || '',
@@ -28,22 +29,24 @@ export function buildItinerary(rows) {
           stay: /check-in/i.test(activity),
           transfer: activity.trim() === '轉車',
           pending: !r['地點'],
+          // 「我是怎麼到這裡的」記在景點上，而不是只留在路段裡。
+          // 當天第一列沒有前一個景點可連，產生不出路段，那一列的交通工具
+          // 會就此消失——但它其實是有意義的：那是從昨晚住的地方出發時搭的。
+          // 補每天頭尾的住宿時要靠它，否則「出發」那段只能寫死成步行，
+          // 12/30 的「市電 五稜郭公園前站」就會變成走路過去。
+          arrive: {
+            // 目的地名稱可覆寫交通方式：例如「函館山纜車」那列填的是步行
+            // （走到纜車站的前半段），但實際是搭纜車上山。
+            mode: overrideModeByDestination(classifyMode(r['交通工具']), r['地點']),
+            label: r['交通工具'] || '',
+            mins: Number.isNaN(mins) ? null : mins,
+          },
         };
       });
 
       const legs = [];
-      for (let i = 1; i < group.rows.length; i++) {
-        const r = group.rows[i];
-        const mins = parseInt(r['交通時間'], 10);
-        legs.push({
-          fromIndex: i - 1,
-          toIndex: i,
-          // 目的地名稱可覆寫交通方式：例如「函館山纜車」那列填的是步行
-          // （走到纜車站的前半段），但實際是搭纜車上山。
-          mode: overrideModeByDestination(classifyMode(r['交通工具']), r['地點']),
-          label: r['交通工具'] || '',
-          mins: Number.isNaN(mins) ? null : mins,
-        });
+      for (let i = 1; i < spots.length; i++) {
+        legs.push({ fromIndex: i - 1, toIndex: i, ...spots[i].arrive });
       }
 
       return {

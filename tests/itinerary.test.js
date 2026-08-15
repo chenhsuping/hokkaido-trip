@@ -85,3 +85,26 @@ describe('buildItinerary', () => {
     expect(days[0].city).toBe('旭川市');
   });
 });
+
+describe('spot.arrive', () => {
+  const rows = [
+    { 日期: '2026-12-30', 地點: '五稜郭公園', 交通工具: '市電 五稜郭公園前站', 交通時間: '12' },
+    { 日期: '2026-12-30', 地點: '成吉思汗大黑屋', 交通工具: '步行', 交通時間: '5' },
+  ];
+
+  it('每個景點記下「我是怎麼到這裡的」，包含當天第一列', () => {
+    const [day] = buildItinerary(rows);
+    expect(day.spots[0].arrive).toEqual({ mode: 'tram', label: '市電 五稜郭公園前站', mins: 12 });
+    expect(day.spots[1].arrive).toEqual({ mode: 'walk', label: '步行', mins: 5 });
+  });
+
+  it('路段直接沿用目的地景點的 arrive，兩者不會各自算一次而分歧', () => {
+    const [day] = buildItinerary(rows);
+    expect(day.legs[0]).toMatchObject({ fromIndex: 0, toIndex: 1, ...day.spots[1].arrive });
+  });
+
+  it('交通工具為空時 arrive 仍存在，預設為步行', () => {
+    const [day] = buildItinerary([{ 日期: '2026-12-30', 地點: 'A' }]);
+    expect(day.spots[0].arrive).toEqual({ mode: 'walk', label: '', mins: null });
+  });
+});

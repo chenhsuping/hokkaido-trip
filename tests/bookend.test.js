@@ -80,6 +80,29 @@ describe('addLodgingBookends', () => {
     expect(out[0].spots.at(-1).name).toBe('Nord 小樽飯店');
   });
 
+  it('出發那段沿用當天第一列填的交通工具，不是一律走路', () => {
+    // 12/30 的第一列是「五稜郭公園／市電 五稜郭公園前站」——從住宿是搭市電過去的
+    const days = [
+      day('2026-12-25', [spot({ name: 'A' })]),
+      day('2026-12-26', [
+        spot({ name: '五稜郭公園', arrive: { mode: 'tram', label: '市電 五稜郭公園前站', mins: 12 } }),
+      ]),
+    ];
+    const out = addLodgingBookends(days, stays);
+    expect(out[1].legs[0]).toMatchObject({
+      fromIndex: 0, toIndex: 1, mode: 'tram', label: '市電 五稜郭公園前站', mins: 12,
+    });
+  });
+
+  it('第一列沒有交通工具資訊時才退回步行', () => {
+    const days = [
+      day('2026-12-25', [spot({ name: 'A' })]),
+      day('2026-12-26', [spot({ name: 'B' })]),
+    ];
+    const out = addLodgingBookends(days, stays);
+    expect(out[1].legs[0]).toMatchObject({ mode: 'walk', label: '出發' });
+  });
+
   it('連住兩晚時，中間那天的頭尾也要補上同一間', () => {
     // 函館 12/28 入住、12/30 退房 —— 12/29 那晚仍然住在這裡
     const twoNight = [{ name: '函館', city: '函館', checkinIso: '2026-12-28', checkoutIso: '2026-12-30' }];

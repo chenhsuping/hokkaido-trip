@@ -43,11 +43,16 @@ export function addLodgingBookends(days, stays) {
     // 開頭：昨晚住的地方（第一天沒有前一晚，跳過）
     const prevNight = i > 0 ? stayOfNight(stays, days[i - 1].date.iso) : null;
     if (prevNight && spots[0]?.name !== prevNight.name) {
+      // 當天第一列填的交通工具就是從住宿出發時搭的，沿用它。
+      // 寫死成步行的話，12/30 的「市電 五稜郭公園前站」會變成走路過去。
+      const arrive = spots[0]?.arrive;
       spots.unshift(spotFromStay(prevNight));
       legs = legs.map(l => ({ ...l, fromIndex: l.fromIndex + 1, toIndex: l.toIndex + 1 }));
       legs.unshift({
         fromIndex: 0, toIndex: 1,
-        mode: 'walk', label: '出發', mins: null,
+        mode: arrive?.mode || 'walk',
+        label: arrive?.label || '出發',
+        mins: arrive?.mins ?? null,
       });
     }
 
