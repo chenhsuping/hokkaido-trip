@@ -180,6 +180,12 @@ section{padding:40px 0}
 /* 住哪裡、吃什麼、逛哪裡共用同一種牌卡。三區回答的問題不同，但都是
    「照片 + 標題 + 幾行說明」，用三套各自長歪的樣式只會讓頁面看起來零散。
    差異只落在左上角徽章的顏色與頁尾放什麼。 */
+/* 卡片本身是一個大連結（點卡片＝在地圖上看這個點），「導航」是另一個
+   會直接動作的連結（開＋開始導航）。<a> 裡面不能再塞一個 <a>，所以多包
+   一層 .pcard-wrap：.pcard 佔滿它，.navbtn 用絕對定位疊在右上角，
+   兩個連結是兄弟關係而非巢狀，點下去才不會互相搶走那次點擊。 */
+.pcard-wrap{position:relative}
+.pcard-wrap > .pcard{height:100%}
 .pcard{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
   display:flex;flex-direction:column;box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);
   transition:transform .25s;color:inherit;text-decoration:none;cursor:pointer}
@@ -188,6 +194,13 @@ section{padding:40px 0}
 .pcard .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .pcard .ph .tag{position:absolute;top:11px;left:11px;background:var(--ink);color:#fff;
   border-radius:99px;padding:4px 11px;font-size:10px;letter-spacing:.1em;font-weight:500}
+.navbtn{position:absolute;top:11px;right:11px;z-index:2;
+  display:inline-flex;align-items:center;gap:5px;background:rgba(28,24,18,.72);
+  backdrop-filter:blur(3px);color:#fff;text-decoration:none;border-radius:99px;
+  padding:6px 12px 6px 9px;font-size:10.5px;letter-spacing:.08em;font-weight:500;
+  box-shadow:0 8px 18px -8px rgba(0,0,0,.55);transition:.2s}
+.navbtn:hover{background:var(--drive)}
+.navbtn svg{flex-shrink:0}
 .pcard.stay .ph .tag{background:var(--stay)}
 .pcard.eat  .ph .tag{background:var(--jr)}
 .pcard.see  .ph .tag{background:var(--drive)}

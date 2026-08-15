@@ -146,29 +146,41 @@ async function start() {
   const md = iso => iso.slice(5).replace('-', '/');
 
   // 有座標查座標（消除同名地點的歧義），沒有才退回用地名＋城市搜尋。
-  const mapsUrl = ({ lat, lng, name, city }) => lat != null && lng != null
-    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, city].filter(Boolean).join(' '))}`;
+  const destParam = ({ lat, lng, name, city }) => lat != null && lng != null
+    ? `${lat},${lng}`
+    : encodeURIComponent([name, city].filter(Boolean).join(' '));
+  const mapsUrl = p => `https://www.google.com/maps/search/?api=1&query=${destParam(p)}`;
+  // dir_action=navigate 讓手機上的 Google 地圖 App 略過路線預覽，直接進入導航畫面。
+  const navUrl = p => `https://www.google.com/maps/dir/?api=1&destination=${destParam(p)}`
+    + `&travelmode=driving&dir_action=navigate`;
 
   /**
-   * 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。點卡片開 Google 地圖。
+   * 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。點卡片開 Google 地圖，
+   * 右上角「導航」鈕直接開始導航。兩者都是 <a>，<a> 裡不能再塞一個 <a>，
+   * 所以外面多包一層 .pcard-wrap，讓兩個連結當兄弟元素、各自可以點。
    *
    * onerror 把載不到的圖片直接移除，露出 .ph 的底色——地名簿可以先寫上
    * 檔名、照片之後再補進 photos/，中間這段期間不會卡著一排破圖圖示。
    */
   const pcard = ({ kind, tag, photo, city, name, dt, memo, foot, lat, lng }) => `
-    <a class="pcard ${kind}" href="${mapsUrl({ lat, lng, name, city })}" target="_blank" rel="noopener">
-      <div class="ph">${photo
-        ? `<img src="${photo}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}
-        ${tag ? `<span class="tag">${tag}</span>` : ''}</div>
-      <div class="bd">
-        ${city ? `<div class="ct">${city}</div>` : ''}
-        <h3>${name}</h3>
-        ${dt ? `<div class="dt">${dt}</div>` : ''}
-        ${memo ? `<div class="memo">${memo}</div>` : ''}
-        ${foot ? `<div class="ft">${foot}</div>` : ''}
-      </div>
-    </a>`;
+    <div class="pcard-wrap">
+      <a class="pcard ${kind}" href="${mapsUrl({ lat, lng, name, city })}" target="_blank" rel="noopener">
+        <div class="ph">${photo
+          ? `<img src="${photo}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}
+          ${tag ? `<span class="tag">${tag}</span>` : ''}</div>
+        <div class="bd">
+          ${city ? `<div class="ct">${city}</div>` : ''}
+          <h3>${name}</h3>
+          ${dt ? `<div class="dt">${dt}</div>` : ''}
+          ${memo ? `<div class="memo">${memo}</div>` : ''}
+          ${foot ? `<div class="ft">${foot}</div>` : ''}
+        </div>
+      </a>
+      <a class="navbtn" href="${navUrl({ lat, lng, name, city })}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 2 19 21 12 17 5 21z"/></svg>
+        導航
+      </a>
+    </div>`;
 
   // stays 已在上方為了補每天頭尾而算好，直接沿用
   document.getElementById('staysgrid').innerHTML = stays.map(s => {
