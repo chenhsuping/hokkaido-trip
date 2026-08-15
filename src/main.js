@@ -145,14 +145,19 @@ async function start() {
   const nt = n => 'NT$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
   const md = iso => iso.slice(5).replace('-', '/');
 
+  // 有座標查座標（消除同名地點的歧義），沒有才退回用地名＋城市搜尋。
+  const mapsUrl = ({ lat, lng, name, city }) => lat != null && lng != null
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([name, city].filter(Boolean).join(' '))}`;
+
   /**
-   * 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。
+   * 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。點卡片開 Google 地圖。
    *
    * onerror 把載不到的圖片直接移除，露出 .ph 的底色——地名簿可以先寫上
    * 檔名、照片之後再補進 photos/，中間這段期間不會卡著一排破圖圖示。
    */
-  const pcard = ({ kind, tag, photo, city, name, dt, memo, foot }) => `
-    <article class="pcard ${kind}">
+  const pcard = ({ kind, tag, photo, city, name, dt, memo, foot, lat, lng }) => `
+    <a class="pcard ${kind}" href="${mapsUrl({ lat, lng, name, city })}" target="_blank" rel="noopener">
       <div class="ph">${photo
         ? `<img src="${photo}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}
         ${tag ? `<span class="tag">${tag}</span>` : ''}</div>
@@ -163,21 +168,26 @@ async function start() {
         ${memo ? `<div class="memo">${memo}</div>` : ''}
         ${foot ? `<div class="ft">${foot}</div>` : ''}
       </div>
-    </article>`;
+    </a>`;
 
   // stays 已在上方為了補每天頭尾而算好，直接沿用
-  document.getElementById('staysgrid').innerHTML = stays.map(s => pcard({
-    kind: 'stay',
-    tag: s.nights != null ? `${s.nights} 晚` : '',
-    photo: resolve(s.name)?.photo,
-    city: s.city,
-    name: s.name,
-    dt: s.checkinIso && s.checkoutIso
-      ? `${md(s.checkinIso)} — ${md(s.checkoutIso)}` : '日期待補',
-    memo: s.memo,
-    foot: `<div class="price${s.ntd ? '' : ' todo'}">${s.ntd ? nt(s.ntd) : '費用待補'}</div>
-      <span class="badge ${s.booked ? 'ok' : 'no'}">${s.booked ? '已訂房' : '未訂房'}</span>`,
-  })).join('');
+  document.getElementById('staysgrid').innerHTML = stays.map(s => {
+    const place = resolve(s.name);
+    return pcard({
+      kind: 'stay',
+      tag: s.nights != null ? `${s.nights} 晚` : '',
+      photo: place?.photo,
+      lat: place?.lat,
+      lng: place?.lng,
+      city: s.city,
+      name: s.name,
+      dt: s.checkinIso && s.checkoutIso
+        ? `${md(s.checkinIso)} — ${md(s.checkoutIso)}` : '日期待補',
+      memo: s.memo,
+      foot: `<div class="price${s.ntd ? '' : ' todo'}">${s.ntd ? nt(s.ntd) : '費用待補'}</div>
+        <span class="badge ${s.booked ? 'ok' : 'no'}">${s.booked ? '已訂房' : '未訂房'}</span>`,
+    });
+  }).join('');
 
   // 以下每個內容區塊各自等自己需要的頁籤，誰先到誰先渲染，互不阻塞。
   pending.dining.then(diningTab => {
@@ -194,6 +204,8 @@ async function start() {
         kind: 'eat',
         tag: d.meal,
         photo: place?.photo,
+        lat: place?.lat,
+        lng: place?.lng,
         city: d.city,
         name: d.name,
         dt: md(d.date),
@@ -204,15 +216,20 @@ async function start() {
 
     // 逛哪裡要扣掉餐廳，所以得等用餐頁籤到齊才能算
     const sights = buildSights({ days, diningNames: dishes.map(d => d.name) });
-    document.getElementById('seesgrid').innerHTML = sights.map(s => pcard({
-      kind: 'see',
-      tag: `Day ${s.dayIndex + 1}`,
-      photo: resolve(s.name)?.photo,
-      city: s.city,
-      name: s.name,
-      dt: `${md(s.date)}${s.time ? `　${s.time}` : ''}`,
-      memo: resolve(s.name)?.desc || s.activity,
-    })).join('');
+    document.getElementById('seesgrid').innerHTML = sights.map(s => {
+      const place = resolve(s.name);
+      return pcard({
+        kind: 'see',
+        tag: `Day ${s.dayIndex + 1}`,
+        photo: place?.photo,
+        lat: place?.lat,
+        lng: place?.lng,
+        city: s.city,
+        name: s.name,
+        dt: `${md(s.date)}${s.time ? `　${s.time}` : ''}`,
+        memo: place?.desc || s.activity,
+      });
+    }).join('');
   });
 
   pending.budget.then(budgetTab => {
