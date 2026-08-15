@@ -9,6 +9,7 @@ import { computeStats } from './overview.js';
 import { buildCities } from './cities.js';
 import { parseDining, ramenTrio } from './dining.js';
 import { buildLodging } from './lodging.js';
+import { addLodgingBookends } from './bookend.js';
 import { summarizeBudget } from './budget.js';
 import { RATE } from '../config.js';
 import { summarizePrep } from './prep.js';
@@ -34,11 +35,14 @@ function augmentResolver(baseResolve, geocoded) {
 }
 
 async function start() {
-  // 六個頁籤同時開始抓，但各自獨立等待——地圖只需要 itinerary，
-  // 不必陪跑最慢的頁籤（實測六個合計約 6.5 秒）。
+  // 六個頁籤同時開始抓，但各自獨立等待。地圖需要 itinerary（行程）
+  // 加上 lodging／todo（推導每天頭尾的住宿點），三者是並行發出的，
+  // 等的是最大值而非總和，仍遠優於原本等齊六個（實測合計約 6.5 秒）。
   const pending = fetchTabsIndividually();
-  const [itineraryTab, placesRes] = await Promise.all([
+  const [itineraryTab, lodgingTab, todoTab, placesRes] = await Promise.all([
     pending.itinerary,
+    pending.lodging,
+    pending.todo,
     fetch('places.json').then(r => r.json()).catch(() => ({})),
   ]);
 
@@ -51,7 +55,14 @@ async function start() {
     return;
   }
 
-  const days = buildItinerary(itineraryTab.rows);
+  // 每天頭尾補上住宿：早上從昨晚住的地方出發、晚上回到當晚住的地方。
+  // 行程頁籤沒記錄這兩段，但那是實際會發生的移動，由住宿頁籤推導補上。
+  const stays = buildLodging({
+    lodgingRows: lodgingTab.ok ? lodgingTab.rows : [],
+    todoRows: todoTab.ok ? todoTab.rows : [],
+    tripStart: TRIP_START, tripEnd: TRIP_END,
+  });
+  const days = addLodgingBookends(buildItinerary(itineraryTab.rows), stays);
   const baseResolve = makeResolver(placesRes);
 
   const anomalies = findDateAnomalies(days.map(d => d.date), TRIP_START);
@@ -139,14 +150,8 @@ async function start() {
         </article>`;
       }).join('');
   });
-  // 住宿需要 lodging + todo 兩個頁籤（規格要求以待辦清單補齊住宿頁籤的缺漏）
-  Promise.all([pending.lodging, pending.todo]).then(([lodgingTab, todoTab]) => {
-    const stays = buildLodging({
-      lodgingRows: lodgingTab.ok ? lodgingTab.rows : [],
-      todoRows: todoTab.ok ? todoTab.rows : [],
-      tripStart: TRIP_START, tripEnd: TRIP_END,
-    });
-    document.getElementById('staysgrid').innerHTML = stays.map(s => {
+  // stays 已在上方為了補每天頭尾而算好，直接沿用
+  document.getElementById('staysgrid').innerHTML = stays.map(s => {
       const photo = resolve(s.name)?.photo;
       const dt = s.checkinIso && s.checkoutIso
         ? `${s.checkinIso.slice(5).replace('-', '/')} — ${s.checkoutIso.slice(5).replace('-', '/')}`
@@ -165,8 +170,7 @@ async function start() {
           </div>
         </div>
       </article>`;
-    }).join('');
-  });
+  }).join('');
 
   pending.budget.then(budgetTab => {
     const CAT_COLOR = { 交通: '#0e7ad4', 住宿: '#7a5cc4', 餐飲: '#f4622e', 生活: '#12a97a' };

@@ -1,5 +1,5 @@
 import { parseDate, compareDates } from './dates.js';
-import { classifyMode } from './transport.js';
+import { classifyMode, overrideModeByDestination } from './transport.js';
 
 /**
  * 每一列 = 一個景點 + 抵達該景點的那一段交通。
@@ -38,7 +38,9 @@ export function buildItinerary(rows) {
         legs.push({
           fromIndex: i - 1,
           toIndex: i,
-          mode: classifyMode(r['交通工具']),
+          // 目的地名稱可覆寫交通方式：例如「函館山纜車」那列填的是步行
+          // （走到纜車站的前半段），但實際是搭纜車上山。
+          mode: overrideModeByDestination(classifyMode(r['交通工具']), r['地點']),
           label: r['交通工具'] || '',
           mins: Number.isNaN(mins) ? null : mins,
         });

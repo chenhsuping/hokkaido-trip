@@ -28,10 +28,11 @@ describe('icon generators', () => {
 });
 
 describe('ICON registry', () => {
-  it('涵蓋五種交通模式，市電有專屬圖示而非沿用腳印', () => {
-    expect(Object.keys(ICON).sort()).toEqual(['bus', 'drive', 'jr', 'tram', 'walk']);
+  it('涵蓋六種交通模式，市電與纜車各有專屬圖示而非沿用腳印', () => {
+    expect(Object.keys(ICON).sort()).toEqual(['bus', 'drive', 'jr', 'ropeway', 'tram', 'walk']);
     expect(ICON.tram).toBe(tramIcon);
     expect(ICON.tram).not.toBe(ICON.walk);
+    expect(ICON.ropeway).not.toBe(ICON.walk);
   });
 
   it('每個登記的產生器都是函式', () => {

@@ -129,4 +129,25 @@ export function walkIcon(s, c) {
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="${c}">${prints}</svg>`;
 }
 
-export const ICON = { jr: trainIcon, drive: carIcon, bus: busIcon, walk: walkIcon, tram: tramIcon };
+/**
+ * 纜車：吊掛在纜索下的車廂。與其他載具最大的不同是「掛在上方的線上」，
+ * 所以纜索畫成貫穿整個寬度的水平線，車廂用吊臂垂在其下。
+ */
+export function ropewayIcon(s, c) {
+  c = c || '#7a5cc4';
+  const sz = s * 0.66;
+  return wide(sz,
+    `<path d="M0 5.5 H44" stroke="#5c5348" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M20 5.5 v3.2 M24 5.5 v3.2" stroke="#5c5348" stroke-width="1.1" stroke-linecap="round"/>
+    <circle cx="20" cy="5.5" r="1.5" fill="#fdfaf4" stroke="#5c5348" stroke-width="1"/>
+    <circle cx="24" cy="5.5" r="1.5" fill="#fdfaf4" stroke="#5c5348" stroke-width="1"/>
+    <rect x="13" y="8.5" width="18" height="10.5" rx="3.4" fill="#fff" stroke="${INK}" stroke-width="1.3"/>
+    <rect x="15.2" y="10.8" width="5.8" height="4.6" rx="1" fill="${INK}" opacity=".82"/>
+    <rect x="22.6" y="10.8" width="5.8" height="4.6" rx="1" fill="${INK}" opacity=".82"/>
+    <rect x="13" y="16.4" width="18" height="1.6" fill="${c}" opacity=".9"/>`);
+}
+
+export const ICON = {
+  jr: trainIcon, drive: carIcon, bus: busIcon,
+  walk: walkIcon, tram: tramIcon, ropeway: ropewayIcon,
+};

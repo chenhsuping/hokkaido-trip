@@ -214,8 +214,13 @@ section{padding:64px 0}
 .task.done .tx{color:var(--ink-3)}
 @media(max-width:1080px){.prep{grid-template-columns:1fr}}
 
-.veh{width:80px;height:52px;margin:-26px 0 0 -40px;pointer-events:none}
-.veh .core{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 3px 5px rgba(43,39,33,.35));
+/* 圖示置中於地圖錨點：SVG（約 38×25）比這個 80×52 的框小，
+   若靠左上對齊，車身會整體偏離實際座標，旋轉也不是繞車身中心。
+   flex 置中後軸心才落在車身正中央，而不是車頭。 */
+.veh{width:80px;height:52px;margin:-26px 0 0 -40px;pointer-events:none;
+  display:flex;align-items:center;justify-content:center}
+.veh .core{display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 3px 5px rgba(43,39,33,.35));
   /* 短 transition：方向現在每幀更新，0.5s 會讓車頭一路慢半拍追著行進方向跑；
      完全拿掉又會在折點處變成生硬的跳動，0.12s 剛好抹平抖動又跟得上。 */
   transition:transform .12s linear}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { classifyMode, MODE_COLORS } from '../src/transport.js';
+import { classifyMode, MODE_COLORS, overrideModeByDestination } from '../src/transport.js';
 
 describe('classifyMode', () => {
   it('辨識 JR 相關', () => {
@@ -51,7 +51,32 @@ describe('MODE_COLORS', () => {
     expect(MODE_COLORS.walk).toBe('#f0ad2a');
   });
 
-  it('航班不畫線', () => {
-    expect(MODE_COLORS.flight).toBeNull();
+  it('航班有專屬顏色——開頭的桃園→新千歲航段要畫出來', () => {
+    expect(MODE_COLORS.flight).toBe('#5c9ecf');
+  });
+
+  it('纜車有專屬顏色', () => {
+    expect(MODE_COLORS.ropeway).toBe('#7a5cc4');
+  });
+});
+
+describe('overrideModeByDestination', () => {
+  it('地點含「纜車」時覆寫為 ropeway——試算表該列填的是步行', () => {
+    expect(overrideModeByDestination('walk', '函館山纜車')).toBe('ropeway');
+  });
+
+  it('日文與英文寫法同樣適用', () => {
+    expect(overrideModeByDestination('walk', '函館山ロープウェイ')).toBe('ropeway');
+    expect(overrideModeByDestination('walk', 'Hakodate Ropeway')).toBe('ropeway');
+  });
+
+  it('一般地點維持原本的分類結果', () => {
+    expect(overrideModeByDestination('walk', '八幡坂')).toBe('walk');
+    expect(overrideModeByDestination('jr', 'JR 札幌站')).toBe('jr');
+  });
+
+  it('地點為空時不覆寫', () => {
+    expect(overrideModeByDestination('bus', '')).toBe('bus');
+    expect(overrideModeByDestination('bus', undefined)).toBe('bus');
   });
 });
