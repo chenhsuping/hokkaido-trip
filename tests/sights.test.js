@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSights } from '../src/sights.js';
+import { buildSights, isPlaceOfInterest } from '../src/sights.js';
 
 const spot = (name, o = {}) => ({
   name, time: '', city: '', activity: '', stay: false, transfer: false, pending: false, ...o,
@@ -97,5 +97,34 @@ describe('buildSights', () => {
 
   it('沒有資料時回傳空陣列', () => {
     expect(buildSights({ days: [] })).toEqual([]);
+  });
+});
+
+describe('isPlaceOfInterest', () => {
+  it('一般景點算數', () => {
+    expect(isPlaceOfInterest(spot('八幡坂'))).toBe(true);
+  });
+
+  it('住宿、轉車、開場出發地、佔位列都不算', () => {
+    expect(isPlaceOfInterest(spot('某飯店', { stay: true }))).toBe(false);
+    expect(isPlaceOfInterest(spot('JR 札幌站', { transfer: true }))).toBe(false);
+    expect(isPlaceOfInterest(spot('桃園國際機場', { opening: true }))).toBe(false);
+    expect(isPlaceOfInterest(spot('待定', { pending: true }))).toBe(false);
+  });
+
+  it('交通節點不算', () => {
+    for (const n of ['新千歲空港', 'JR 函館站', '旭川巴士總站 6 號月台', 'JR Rent-A-Car Toya']) {
+      expect(isPlaceOfInterest(spot(n))).toBe(false);
+    }
+  });
+
+  it('沒有名稱的不算，也不會拋錯', () => {
+    expect(isPlaceOfInterest(spot(''))).toBe(false);
+    expect(isPlaceOfInterest(null)).toBe(false);
+    expect(isPlaceOfInterest(undefined)).toBe(false);
+  });
+
+  it('餐廳算數——時間軸要列出來，扣掉餐廳是 buildSights 另外做的事', () => {
+    expect(isPlaceOfInterest(spot('山崎洋服店'))).toBe(true);
   });
 });

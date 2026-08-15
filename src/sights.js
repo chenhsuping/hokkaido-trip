@@ -33,6 +33,18 @@ const isTransit = name => TRANSIT.some(re => re.test(name));
 
 const norm = s => String(s ?? '').replace(/\s+/g, '').toLowerCase();
 
+/**
+ * 這個地點本身值不值得列出來——住宿、轉車、開場出發地、佔位列與交通節點都不算。
+ *
+ * 「逛哪裡」和左側時間軸共用同一套判準：同一個地方不該在一邊看得到、
+ * 另一邊卻消失。差別只在「逛哪裡」還要另外扣掉餐廳（那是吃什麼的內容），
+ * 時間軸則連餐廳一起列——那是當天真的會去的地方。
+ */
+export function isPlaceOfInterest(spot) {
+  if (!spot?.name || spot.stay || spot.transfer || spot.opening || spot.pending) return false;
+  return !isTransit(spot.name);
+}
+
 export function buildSights({ days, diningNames = [] }) {
   const skip = new Set(diningNames.map(norm));
   const seen = new Set();
@@ -40,8 +52,7 @@ export function buildSights({ days, diningNames = [] }) {
 
   for (const day of days) {
     for (const [i, spot] of day.spots.entries()) {
-      if (!spot.name || spot.stay || spot.transfer || spot.opening || spot.pending) continue;
-      if (isTransit(spot.name)) continue;
+      if (!isPlaceOfInterest(spot)) continue;
       const key = norm(spot.name);
       if (skip.has(key) || seen.has(key)) continue;
       seen.add(key);
