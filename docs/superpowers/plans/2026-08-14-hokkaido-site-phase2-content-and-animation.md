@@ -2925,7 +2925,7 @@ Expected: 含 `12/25` 的文字（Day 1 動畫通常需要數十秒，4 秒內�
 - [ ] **Step 7: 驗證訂位代號等敏感欄位仍未外洩**
 
 ```bash
-agent-browser eval "document.documentElement.outerHTML.includes('TCCR4K')"
+agent-browser eval "document.documentElement.outerHTML.includes('ABC123')"
 ```
 Expected: `false`
 

@@ -661,7 +661,7 @@ describe('COLUMNS', () => {
 
 describe('pickColumns', () => {
   it('只保留白名單內的欄位', () => {
-    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': 'TCCR4K', 交通工具: '步行' }];
+    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': 'ABC123', 交通工具: '步行' }];
     const out = pickColumns(rows, ['日期', '交通工具']);
     expect(out).toEqual([{ 日期: '2026-12-25', 交通工具: '步行' }]);
     expect('訂位 / 備註' in out[0]).toBe(false);
@@ -673,9 +673,9 @@ describe('pickColumns', () => {
   });
 
   it('訂位代號不會出現在序列化結果中', () => {
-    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': '訂位代號：TCCR4K' }];
+    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': '訂位代號：ABC123' }];
     const out = pickColumns(rows, COLUMNS.transport);
-    expect(JSON.stringify(out)).not.toContain('TCCR4K');
+    expect(JSON.stringify(out)).not.toContain('ABC123');
   });
 });
 
@@ -1533,7 +1533,7 @@ Expected: `{"days":7,"spots":42,"notice":false}`——若 `notice` 為 `true`，
 
 Run:
 ```bash
-agent-browser eval "document.documentElement.outerHTML.includes('TCCR4K') || JSON.stringify(window.__trip).includes('TCCR4K')"
+agent-browser eval "document.documentElement.outerHTML.includes('ABC123') || JSON.stringify(window.__trip).includes('ABC123')"
 ```
 Expected: `false`
 
@@ -2049,7 +2049,7 @@ gh api -X POST repos/:owner/hokkaido-trip/pages -f "source[branch]=main" -f "sou
 
 ```bash
 agent-browser open "https://<owner>.github.io/hokkaido-trip/"
-agent-browser eval "JSON.stringify({days: window.__trip.days.length, maps: document.querySelectorAll('.leaflet-container').length, attrib: document.querySelector('.leaflet-control-attribution').textContent.includes('OpenStreetMap'), leak: document.documentElement.outerHTML.includes('TCCR4K')})"
+agent-browser eval "JSON.stringify({days: window.__trip.days.length, maps: document.querySelectorAll('.leaflet-container').length, attrib: document.querySelector('.leaflet-control-attribution').textContent.includes('OpenStreetMap'), leak: document.documentElement.outerHTML.includes('ABC123')})"
 ```
 Expected: `{"days":7,"maps":1,"attrib":true,"leak":false}`
 

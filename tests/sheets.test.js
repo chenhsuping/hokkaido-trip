@@ -17,7 +17,7 @@ describe('COLUMNS', () => {
 
 describe('pickColumns', () => {
   it('只保留白名單內的欄位', () => {
-    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': 'TCCR4K', 交通工具: '步行' }];
+    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': 'ABC123', 交通工具: '步行' }];
     const out = pickColumns(rows, ['日期', '交通工具']);
     expect(out).toEqual([{ 日期: '2026-12-25', 交通工具: '步行' }]);
     expect('訂位 / 備註' in out[0]).toBe(false);
@@ -29,9 +29,9 @@ describe('pickColumns', () => {
   });
 
   it('訂位代號不會出現在序列化結果中', () => {
-    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': '訂位代號：TCCR4K' }];
+    const rows = [{ 日期: '2026-12-25', '訂位 / 備註': '訂位代號：ABC123' }];
     const out = pickColumns(rows, COLUMNS.transport);
-    expect(JSON.stringify(out)).not.toContain('TCCR4K');
+    expect(JSON.stringify(out)).not.toContain('ABC123');
   });
 });
 
