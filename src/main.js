@@ -37,6 +37,35 @@ function augmentResolver(baseResolve, geocoded) {
   return name => baseResolve(name) || geocoded.get(name) || null;
 }
 
+/**
+ * 「全部明細」彈出視窗。面板裡只放得下前幾項，其餘從這裡看。
+ * 開啟時鎖住背景捲動——否則在視窗內捲到底會接著捲動整個頁面，
+ * 關掉之後會發現自己跑到別的區塊去了。
+ */
+const costModal = {
+  el: document.getElementById('costmodal'),
+  lastFocus: null,
+  open() {
+    this.lastFocus = document.activeElement;
+    this.el.hidden = false;
+    document.body.style.overflow = 'hidden';
+    this.el.querySelector('.mclose').focus();
+  },
+  close() {
+    this.el.hidden = true;
+    document.body.style.overflow = '';
+    this.lastFocus?.focus();
+  },
+};
+
+// 點背景或關閉鈕都收起來；點在視窗內容上不會誤觸（e.target 是 .mbox 的子孫）
+costModal.el.addEventListener('click', e => {
+  if (e.target === costModal.el || e.target.closest('.mclose')) costModal.close();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !costModal.el.hidden) costModal.close();
+});
+
 async function start() {
   // 六個頁籤同時開始抓，但各自獨立等待。地圖需要 itinerary（行程）
   // 加上 lodging／todo（推導每天頭尾的住宿點），三者是並行發出的，
@@ -193,6 +222,12 @@ async function start() {
     const budget = summarizeBudget(budgetTab.ok ? budgetTab.rows : [], RATE);
     const jp = n => '¥' + n.toLocaleString('en-US');
 
+    const citem = it => `
+      <div class="citem${it.filled ? '' : ' blank'}">
+        <div class="nm">${it.name}<i>${it.category} · ${it.subcategory}</i></div>
+        <div class="amt">${it.filled ? nt(Math.round(it.twd)) + (it.jpy ? `<em>${jp(it.jpy)}</em>` : '') : '待補'}</div>
+      </div>`;
+
     document.getElementById('costblock').innerHTML = `
       <div class="rate">匯率　<b>¥1 = NT$${RATE}</b></div>
       <div class="costtop">
@@ -200,7 +235,7 @@ async function start() {
         <div class="stat"><div class="v">${budget.filledCount}<small> / ${budget.totalCount} 項</small></div><div class="k">已填金額項數</div></div>
       </div>
       <div class="costgrid">
-        <div class="panel"><h3>分類佔比</h3>
+        <div class="panel cats"><h3>分類佔比</h3>
           ${budget.categoryTotals.sort((a, b) => (b.twd ?? 0) - (a.twd ?? 0)).map(c => `
             <div class="cat">
               <div class="top"><b>${c.category}</b><span>${c.twd != null ? nt(Math.round(c.twd)) : '待補'}</span></div>
@@ -208,14 +243,28 @@ async function start() {
                 background:${CAT_COLOR[c.category] || '#a89c8c'}"></i></div>
             </div>`).join('')}
         </div>
-        <div class="panel"><h3>明細</h3>
-          ${budget.items.map(it => `
-            <div class="citem${it.filled ? '' : ' blank'}">
-              <div class="nm">${it.name}<i>${it.category} · ${it.subcategory}</i></div>
-              <div class="amt">${it.filled ? nt(Math.round(it.twd)) + (it.jpy ? `<em>${jp(it.jpy)}</em>` : '') : '待補'}</div>
-            </div>`).join('')}
+        <div class="panel detail"><h3>明細</h3>
+          <div class="dlist">${budget.items.map(citem).join('')}</div>
+          <button type="button" class="more">全部展開　${budget.totalCount} 項</button>
         </div>
       </div>`;
+
+    document.getElementById('costmodalbody').innerHTML = budget.items.map(citem).join('');
+    document.getElementById('costmodalcount').textContent = `　${budget.totalCount} 項`;
+    document.querySelector('#costblock .more').addEventListener('click', () => costModal.open());
+
+    // 明細裁到與分類佔比同高。左欄高度取決於分類數（今天是四類，之後可能變），
+    // 所以量出來設定而不是寫死；ResizeObserver 也讓字體載入、視窗縮放後跟著調整。
+    const cats = document.querySelector('#costblock .panel.cats');
+    const detail = document.querySelector('#costblock .panel.detail');
+    const syncHeight = () => {
+      // 窄畫面時 costgrid 收成單欄，左右不再並排，裁切失去意義
+      detail.style.height = window.matchMedia('(min-width:1081px)').matches
+        ? `${cats.offsetHeight}px` : '';
+    };
+    new ResizeObserver(syncHeight).observe(cats);
+    window.addEventListener('resize', syncHeight);
+    syncHeight();
   });
 
   pending.todo.then(todoTab => {
