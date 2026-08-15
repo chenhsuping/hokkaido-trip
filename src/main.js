@@ -118,10 +118,16 @@ async function start() {
   const nt = n => 'NT$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
   const md = iso => iso.slice(5).replace('-', '/');
 
-  /** 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。 */
+  /**
+   * 三個區塊共用的牌卡。kind 只決定左上角徽章的顏色。
+   *
+   * onerror 把載不到的圖片直接移除，露出 .ph 的底色——地名簿可以先寫上
+   * 檔名、照片之後再補進 photos/，中間這段期間不會卡著一排破圖圖示。
+   */
   const pcard = ({ kind, tag, photo, city, name, dt, memo, foot }) => `
     <article class="pcard ${kind}">
-      <div class="ph">${photo ? `<img src="${photo}" alt="${name}" loading="lazy">` : ''}
+      <div class="ph">${photo
+        ? `<img src="${photo}" alt="${name}" loading="lazy" onerror="this.remove()">` : ''}
         ${tag ? `<span class="tag">${tag}</span>` : ''}</div>
       <div class="bd">
         ${city ? `<div class="ct">${city}</div>` : ''}
