@@ -72,17 +72,61 @@ export function busIcon(s, c) {
     <circle cx="30.6" cy="19.6" r="3.2" fill="${INK}"/><circle cx="30.6" cy="19.6" r="1.3" fill="#fff"/>`);
 }
 
-export function walkIcon(s, c) {
-  c = c || INK;
-  const sz = s * 0.62;
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="${c}">
-    <ellipse cx="8.4" cy="16.2" rx="3.3" ry="4.7" transform="rotate(-10 8.4 16.2)"/>
-    <circle cx="5.4" cy="10.4" r="1.25"/><circle cx="8.2" cy="9.5" r="1.35"/>
-    <circle cx="11" cy="9.9" r="1.15"/><circle cx="13" cy="11.4" r=".95"/>
-    <ellipse cx="16.6" cy="11.6" rx="2.9" ry="4.2" transform="rotate(-10 16.6 11.6)"/>
-    <circle cx="13.9" cy="6.3" r="1.1"/><circle cx="16.5" cy="5.5" r="1.2"/>
-    <circle cx="19" cy="5.9" r="1"/><circle cx="20.8" cy="7.2" r=".85"/>
-  </svg>`;
+/**
+ * 市電／地下鐵：單節路面電車。與 JR 的高速列車明確區隔——方頭而非流線車頭、
+ * 車頂有集電弓、車身較短，這些都是路面電車的識別特徵。
+ * 顏色沿用設計 token 的市電色 #f0ad2a。
+ */
+export function tramIcon(s, c) {
+  c = c || '#f0ad2a';
+  const sz = s * 0.66;
+  return wide(sz,
+    `<path d="M14 4.5 h4 l-1.6 3.5 h-.8 z" fill="#5c5348"/>
+    <path d="M10 4.8 l6 3.2 M22 4.8 l-6 3.2" stroke="#5c5348" stroke-width="1" stroke-linecap="round"/>
+    <rect x="6" y="7.5" width="24" height="11" rx="3" fill="#fff" stroke="${INK}" stroke-width="1.3"/>
+    <rect x="8.4" y="9.8" width="8.4" height="4.4" rx="1" fill="${INK}" opacity=".82"/>
+    <rect x="18.4" y="9.8" width="5.6" height="4.4" rx="1" fill="${INK}" opacity=".82"/>
+    <rect x="25.6" y="9.8" width="2.8" height="4.4" rx="1" fill="${c}"/>
+    <rect x="6" y="15.4" width="24" height="1.7" fill="${c}" opacity=".9"/>
+    <circle cx="12" cy="19.4" r="2.4" fill="${INK}"/><circle cx="12" cy="19.4" r=".9" fill="#fff"/>
+    <circle cx="24" cy="19.4" r="2.4" fill="${INK}"/><circle cx="24" cy="19.4" r=".9" fill="#fff"/>
+    <path d="M4.4 20.6 h27" stroke="#8f96a1" stroke-width=".9" stroke-linecap="round"/>`);
 }
 
-export const ICON = { jr: trainIcon, drive: carIcon, bus: busIcon, walk: walkIcon, tram: walkIcon };
+/**
+ * 步行：一步一腳印。四個腳印左右交錯排列，依序淡入再整組淡出，
+ * 看起來像有人正一步步往前走過去。
+ *
+ * 用 SMIL 的 animate 而非 CSS：這個 SVG 是塞進 Leaflet divIcon 的 innerHTML，
+ * 每次切換交通方式都會整個重建，CSS keyframes 的進度會跟著重置而對不上，
+ * 內嵌 animate 則隨元素自己走。
+ */
+export function walkIcon(s, c) {
+  c = c || INK;
+  const sz = s * 0.68;
+  const CYCLE = 1.6;                     // 一輪走完四步的秒數
+  const steps = [
+    { x: 4.5,  y: 16.5, rot: -12 },      // 左
+    { x: 9.5,  y: 12.5, rot: -4 },       // 右
+    { x: 14.5, y: 16.5, rot: -12 },      // 左
+    { x: 19.5, y: 12.5, rot: -4 },       // 右
+  ];
+
+  const prints = steps.map((st, i) => {
+    const begin = (i * CYCLE / steps.length).toFixed(2);
+    return `<g transform="rotate(${st.rot} ${st.x} ${st.y})" opacity="0">
+      <ellipse cx="${st.x}" cy="${st.y}" rx="1.5" ry="2.2"/>
+      <circle cx="${st.x - 1.15}" cy="${st.y - 2.9}" r=".55"/>
+      <circle cx="${st.x - 0.15}" cy="${st.y - 3.35}" r=".62"/>
+      <circle cx="${st.x + 0.85}" cy="${st.y - 3.15}" r=".52"/>
+      <circle cx="${st.x + 1.6}" cy="${st.y - 2.5}" r=".42"/>
+      <animate attributeName="opacity"
+        values="0;1;1;0" keyTimes="0;0.12;0.72;1"
+        dur="${CYCLE}s" begin="${begin}s" repeatCount="indefinite"/>
+    </g>`;
+  }).join('');
+
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="${c}">${prints}</svg>`;
+}
+
+export const ICON = { jr: trainIcon, drive: carIcon, bus: busIcon, walk: walkIcon, tram: tramIcon };

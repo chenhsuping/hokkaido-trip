@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { trainIcon, carIcon, busIcon, walkIcon, ICON } from '../src/icons.js';
+import { trainIcon, carIcon, busIcon, walkIcon, tramIcon, ICON } from '../src/icons.js';
 
 describe('icon generators', () => {
   it('每個圖示都回傳有效的 svg 字串', () => {
-    for (const fn of [trainIcon, carIcon, busIcon, walkIcon]) {
+    for (const fn of [trainIcon, carIcon, busIcon, walkIcon, tramIcon]) {
       const svg = fn(40);
       expect(svg).toContain('<svg');
       expect(svg).toContain('</svg>');
@@ -28,12 +28,43 @@ describe('icon generators', () => {
 });
 
 describe('ICON registry', () => {
-  it('涵蓋五種交通模式，tram 與 walk 共用同一圖示', () => {
+  it('涵蓋五種交通模式，市電有專屬圖示而非沿用腳印', () => {
     expect(Object.keys(ICON).sort()).toEqual(['bus', 'drive', 'jr', 'tram', 'walk']);
-    expect(ICON.tram).toBe(ICON.walk);
+    expect(ICON.tram).toBe(tramIcon);
+    expect(ICON.tram).not.toBe(ICON.walk);
   });
 
   it('每個登記的產生器都是函式', () => {
     for (const fn of Object.values(ICON)) expect(typeof fn).toBe('function');
+  });
+});
+
+describe('walkIcon 腳印動畫', () => {
+  it('四個腳印，左右交錯排列', () => {
+    const svg = walkIcon(40);
+    expect((svg.match(/<ellipse/g) || []).length).toBe(4);
+  });
+
+  it('每個腳印依序淡入，形成一步一腳印', () => {
+    const svg = walkIcon(40);
+    const begins = [...svg.matchAll(/begin="([\d.]+)s"/g)].map(m => Number(m[1]));
+    expect(begins).toEqual([0, 0.4, 0.8, 1.2]);
+  });
+
+  it('用內嵌 SMIL animate 而非 CSS class，避免 divIcon 重建時進度重置', () => {
+    expect(walkIcon(40)).toContain('<animate');
+  });
+});
+
+describe('tramIcon', () => {
+  it('有集電弓與軌道，與 JR 高速列車區隔', () => {
+    const svg = tramIcon(40);
+    expect(svg).toContain('#5c5348');   // 集電弓
+    expect(svg).not.toContain('trainBody');
+  });
+
+  it('可自訂顏色，預設為設計 token 的市電色', () => {
+    expect(tramIcon(40)).toContain('#f0ad2a');
+    expect(tramIcon(40, '#123456')).toContain('#123456');
   });
 });

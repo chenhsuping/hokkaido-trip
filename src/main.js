@@ -240,26 +240,25 @@ async function start() {
     autoplay?.stop();
   }, { capture: true });
 
-  timeline.select(null);
+  // 直接從 Day 1 開始（startAutoplay 內部會 select(0)），不再以全程直線圖開場
   autoplay = startAutoplay({ days, timeline });
 
   window.__trip = { days, resolve, pending, unknownNames, geocoded, mapApi, timeline, autoplay };
 
   // 地理編碼在背景跑：每筆至少間隔 1 秒（Nominatim 使用政策），放在渲染流程裡
-  // 會讓地圖白等好幾秒。查到座標就補進 geocoded，並重畫當前檢視。
+  // 會讓地圖白等好幾秒。查到的座標寫進 geocoded，供之後切換日期時取用——
+  // 不主動重畫，那會打斷使用者當下正在看的那一天。
   if (unknownNames.length) {
     const geocoder = makeGeocoder();
     (async () => {
-      let found = false;
       for (const name of unknownNames) {
         const coords = await geocoder.lookup(name);
-        if (coords) { geocoded.set(name, coords); found = true; }
+        if (coords) geocoded.set(name, coords);
       }
       const stillUnknown = unknownNames.filter(n => !geocoded.has(n));
       if (stillUnknown.length) {
         showNotice([...messages, `以下地點尚無座標，未顯示於地圖：${stillUnknown.join('、')}`]);
       }
-      if (found) mapApi.showAll();   // 補畫剛查到座標的地點
     })();
   }
 }
