@@ -17,7 +17,6 @@ import { summarizeBudget } from './budget.js';
 import { RATE } from '../config.js';
 import { summarizePrep } from './prep.js';
 import { findDateAnomalies } from './dates.js';
-import { formatCountdown } from './countdown.js';
 import { TRIP_START, TRIP_END } from '../config.js';
 
 const notice = document.getElementById('notice');
@@ -116,7 +115,6 @@ async function start() {
 
   showNotice(messages);
 
-  document.getElementById('cd').textContent = formatCountdown(TRIP_START);
   document.getElementById('herodates').innerHTML =
     `${TRIP_START.replace(/-/g, '.')} — ${TRIP_END.replace(/-/g, '.')}`;
 
