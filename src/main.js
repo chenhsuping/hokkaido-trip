@@ -84,9 +84,6 @@ async function start() {
   document.getElementById('cd').textContent = formatCountdown(TRIP_START);
   document.getElementById('herodates').innerHTML =
     `${TRIP_START.replace(/-/g, '.')} — ${TRIP_END.replace(/-/g, '.')}`;
-  const heroImg = document.getElementById('heroimg');
-  const firstPhoto = days.flatMap(d => d.spots).map(s => resolve(s.name)?.photo).find(Boolean);
-  if (firstPhoto) heroImg.src = firstPhoto;
 
   const navLinks = [...document.querySelectorAll('#navlinks a')];
   const sections = navLinks.map(a => document.querySelector(a.getAttribute('href')));

@@ -83,21 +83,19 @@ nav a:hover{color:var(--ink);border-bottom-color:var(--drive)}
 nav a.on{color:var(--ink);border-bottom-color:var(--drive)}
 
 .cap{font-size:10px;letter-spacing:.26em;font-weight:500;color:var(--drive);text-transform:uppercase}
-.hero{position:relative;height:min(560px,72vh);overflow:hidden;display:flex;align-items:flex-end}
-.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hero::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(20,16,12,.42) 0%,rgba(20,16,12,.12) 34%,rgba(20,16,12,.72) 100%)}
-.hero .wrap{position:relative;z-index:2;padding-bottom:40px;width:100%;color:#fff;
+/* 封面不放大圖：改成純文字的排版式封面，沿用內文的紙感底色與墨色。
+   少了照片就不需要為了壓住圖而加的深色漸層與文字陰影，也不必再撐到
+   72vh —— 高度改由留白決定，捲一下就進得到內容。 */
+.hero{position:relative;border-bottom:1px solid var(--line)}
+.hero .wrap{padding-top:76px;padding-bottom:52px;width:100%;
   display:flex;align-items:flex-end;justify-content:space-between;gap:36px;flex-wrap:wrap}
-.hero .cap{color:#ffd9c6}
-.hero h1{font-size:52px;font-weight:700;letter-spacing:.13em;line-height:1.1;margin:12px 0 14px;
-  text-shadow:0 2px 24px rgba(0,0,0,.35)}
-.hero .dates{font-size:14px;letter-spacing:.1em;font-weight:500;margin-bottom:8px}
-.hero .cities{font-size:12.5px;letter-spacing:.18em;color:rgba(255,255,255,.82)}
+.hero h1{font-size:52px;font-weight:700;letter-spacing:.13em;line-height:1.1;margin:12px 0 14px}
+.hero .dates{font-size:14px;letter-spacing:.1em;font-weight:500;margin-bottom:8px;color:var(--ink-2);
+  font-variant-numeric:tabular-nums}
+.hero .cities{font-size:12.5px;letter-spacing:.18em;color:var(--ink-3)}
 .countdown{text-align:right;flex-shrink:0}
-.countdown .num{font-family:"Zen Maru Gothic";font-weight:700;font-size:58px;line-height:1;
-  text-shadow:0 2px 24px rgba(0,0,0,.35)}
-.countdown .lbl{font-size:10.5px;letter-spacing:.22em;color:rgba(255,255,255,.8);margin-top:8px}
+.countdown .num{font-family:"Zen Maru Gothic";font-weight:700;font-size:58px;line-height:1;color:var(--drive)}
+.countdown .lbl{font-size:10.5px;letter-spacing:.22em;color:var(--ink-3);margin-top:8px}
 
 section{padding:64px 0}
 .shead{margin-bottom:30px}
@@ -132,7 +130,9 @@ section{padding:64px 0}
   padding:3px 11px;font-size:10.5px;letter-spacing:.08em;font-weight:500;margin-bottom:8px}
 .rcard h4{font-family:"Zen Maru Gothic";font-size:15px;font-weight:700;letter-spacing:.02em;margin:0 0 4px}
 .rcard .mt{font-size:10px;letter-spacing:.08em;color:var(--ink-3)}
-.eats{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+/* 一列三張，依日期時間由左而右排。固定三欄而非 auto-fill：
+   自動填滿會隨視窗寬度變成四、五欄，一列幾張看心情，讀起來沒有節奏。 */
+.eats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .eat{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;
   box-shadow:0 1px 1px rgba(43,39,33,.03),0 16px 28px -28px rgba(43,39,33,.6)}
 .eat .ph{aspect-ratio:4/3;background:#f4ece0}
@@ -144,8 +144,12 @@ section{padding:64px 0}
 .eat .rz{font-size:9.5px;letter-spacing:.08em;font-weight:500;margin-top:5px}
 .eat .rz.yes{color:#0d7a58}
 .eat .rz.no{color:#c2451c}
+@media(max-width:1080px){.eats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.eats{grid-template-columns:1fr}}
 
-.stays{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:20px}
+.stays{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:1080px){.stays{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.stays{grid-template-columns:1fr}}
 .stay{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
   display:flex;flex-direction:column;box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);
   transition:transform .25s}
@@ -254,7 +258,6 @@ section{padding:64px 0}
 </nav>
 
 <header class="hero" id="hero">
-  <img id="heroimg" alt="">
   <div class="wrap">
     <div>
       <div class="cap">Hokkaido · Winter Itinerary</div>
@@ -289,12 +292,12 @@ section{padding:64px 0}
   <section id="food">
     <div class="shead"><div class="cap">What to eat</div><h2>吃什麼</h2></div>
     <div id="ramenblock"></div>
-    <div id="eatsgrid"></div>
+    <div id="eatsgrid" class="eats"></div>
   </section>
 
   <section id="stay">
     <div class="shead"><div class="cap">Where to stay</div><h2>住哪裡</h2></div>
-    <div id="staysgrid"></div>
+    <div id="staysgrid" class="stays"></div>
   </section>
 
   <section id="cost">
