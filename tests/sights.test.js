@@ -39,12 +39,32 @@ describe('buildSights', () => {
     expect(buildSights({ days }).map(s => s.name)).toEqual(['平和通商店街']);
   });
 
-  it('排除開場航段的出發機場——那時人還在台灣', () => {
+  it('排除開場航段的出發地——那時人還在台灣', () => {
     const days = [day('2026-12-25', [
-      spot('桃園國際機場', { opening: true }),
-      spot('新千歲空港'),
+      spot('某出發地', { opening: true }),
+      spot('平和通商店街'),
     ])];
-    expect(buildSights({ days }).map(s => s.name)).toEqual(['新千歲空港']);
+    expect(buildSights({ days }).map(s => s.name)).toEqual(['平和通商店街']);
+  });
+
+  it('排除機場、車站、巴士站與租車據點——那是上下車的地方，不是去逛的', () => {
+    const days = [day('2026-12-25', [
+      spot('新千歲空港'),
+      spot('JR 函館站'),
+      spot('旭川巴士總站 6 號月台'),
+      spot('旭山動物園 巴士站'),
+      spot('JR Rent-A-Car Toya'),
+      spot('JR車站租車 函館營業所'),
+      spot('五稜郭公園'),
+    ])];
+    expect(buildSights({ days }).map(s => s.name)).toEqual(['五稜郭公園']);
+  });
+
+  it('名稱含「站」但不是車站的地方要留著', () => {
+    const days = [day('2026-12-25', [
+      spot('平和通商店街'), spot('函館朝市'), spot('北海道廳舊本廳舍'), spot('札幌時計台'),
+    ])];
+    expect(buildSights({ days })).toHaveLength(4);
   });
 
   it('排除地點還沒填的佔位列', () => {
