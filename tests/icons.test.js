@@ -11,7 +11,19 @@ describe('icon generators', () => {
   });
 
   it('尺寸反映在 width/height 屬性上', () => {
-    expect(trainIcon(40)).toMatch(/width="6\d(\.\d+)?"/);
+    expect(trainIcon(40)).toMatch(/width="\d+(\.\d+)?"/);
+    expect(Number(trainIcon(40).match(/width="([\d.]+)"/)[1])).toBeGreaterThan(0);
+  });
+
+  it('列車不畫車輪——40px 下輪子只會變成車底一排難辨的黑點', () => {
+    expect(trainIcon(40)).not.toContain('spinw');
+    expect(trainIcon(40)).not.toContain('animateTransform');
+  });
+
+  it('列車為兩節車廂', () => {
+    // 兩節車身各有一條橘色腰線
+    const stripes = trainIcon(40).match(/fill="#f0a02a" opacity="\.9"/g) || [];
+    expect(stripes.length).toBe(2);
   });
 });
 

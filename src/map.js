@@ -177,7 +177,13 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         if (myToken !== playToken) return;
         const points = (roadLine || smoothPath([from, to])).map(p => L.latLng(p.lat, p.lng));
 
-        if (legDistM < 2600) {
+        // 轉車站只是路過換車，不是真的景點——放大過去會讓鏡頭在同一個車站
+        // 前後拉近兩次（進站、出站），節奏很突兀。維持當下視野直接開過去。
+        const arrivingAtTransfer = day.spots[leg.toIndex]?.transfer;
+
+        if (arrivingAtTransfer) {
+          // 不調整視野
+        } else if (legDistM < 2600) {
           const mid = L.latLng((fromLL.lat + toLL.lat) / 2, (fromLL.lng + toLL.lng) / 2);
           map.flyTo(mid, legDistM < 900 ? 16 : 15, { duration: 0.9 });
         } else if (legDistM < 16000) {
@@ -191,9 +197,13 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         await new Promise(r => setTimeout(r, 900));
         if (myToken !== playToken) return;
 
-        const durationMs = Math.max(3200, Math.min(9000, legDistM / 16));
+        // 放慢：原本 legDist/16 上限 9 秒，改為 /9 上限 16 秒，讓長途路段看得出移動過程。
+        const durationMs = Math.max(5200, Math.min(16000, legDistM / 9));
         const startedAt = performance.now();
         let lastPanAt = startedAt;
+        // 震動要掛在內層 .veh，不是 getElement() 回傳的外層 .leaflet-marker-icon——
+        // 那層的 transform 被 Leaflet 用來定位，每次 setLatLng() 都會覆寫掉。
+        const vehEl = vehMarker.getElement()?.querySelector('.veh');
 
         await new Promise(r => {
           function tick(now) {
@@ -203,6 +213,15 @@ export function createMap(el, { days, resolve: resolvePlace }) {
             const idx = Math.min(points.length - 1, Math.round(eased * (points.length - 1)));
             const here = points[idx];
             vehMarker.setLatLng(here);
+
+            // 行駛震動：疊在外層 .veh 上，不動內層 .core 的 rotate/scaleX
+            // （那是 applyHeadingToMarker 在管方向的，覆寫會讓車頭轉錯邊）。
+            // 兩個不同頻率的正弦相加，避免規律到看起來像機械擺動。
+            if (vehEl) {
+              const shake = Math.sin(now / 42) * 0.7 + Math.sin(now / 27) * 0.35;
+              const bob = Math.sin(now / 95) * 0.5;
+              vehEl.style.transform = `translate(${bob.toFixed(2)}px, ${shake.toFixed(2)}px)`;
+            }
 
             if (now - lastPanAt > 260) {
               lastPanAt = now;
@@ -218,8 +237,17 @@ export function createMap(el, { days, resolve: resolvePlace }) {
           requestAnimationFrame(tick);
         });
         if (myToken !== playToken) return;
+        if (vehEl) vehEl.style.transform = '';   // 停穩後歸零，否則會停在震動的偏移位置
 
         const arrivedSpotIndex = leg.toIndex;
+
+        // 轉車站只是換車，不拉近視野、不彈景點圖卡、短暫停頓就接續下一段。
+        if (arrivingAtTransfer) {
+          await new Promise(r => setTimeout(r, 700));
+          await step(k + 1);
+          return;
+        }
+
         map.flyTo(toLL, Math.max(map.getZoom(), 14.5), { duration: 1 });
         await new Promise(r => setTimeout(r, 1050));
         if (myToken !== playToken) return;

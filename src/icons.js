@@ -4,14 +4,17 @@ function wide(s, inner) {
 }
 
 /**
- * 高速列車圖示：流線車頭、灰白漸層車身、深色車窗帶、車尾拖出的橘色速度殘影、
- * 會自轉的車輪——這些都是刻意的視覺線索，讓靜止的截圖也讀得出「正在高速行駛」。
- * 車頭朝右（沿用 car/bus 圖示既有的朝向慣例），moves left→right 時不需翻面。
- * 不做內部縮小：地圖上的載具只有 40px，車頭／車窗／殘影線這些細節再乘 0.7
- * 就會糊成一個看不出形狀的深色小點（實測過）。bus 與 walk 造型單純才禁得起縮小。
+ * 高速列車圖示：兩節車廂、流線車頭、灰白漸層車身、深色車窗帶、車尾橘色速度殘影。
+ * 車頭朝右（沿用 car/bus 圖示既有的朝向慣例），左→右移動時不需翻面。
+ *
+ * 刻意不畫車輪：高速列車的裙板本來就會遮住轉向架，而且在 40px 的地圖尺寸下，
+ * 輪子只會變成車底一排看不出是什麼的黑點，反而干擾車身輪廓的辨識。
+ * 速度感改由橘色殘影線 + map.js 的行駛震動負責。
+ *
+ * 縮到 0.82 倍：兩節車廂讓水平長度比原本單節長不少，不縮的話在地圖上會過於搶眼。
  */
 export function trainIcon(s) {
-  const size = s;
+  const size = s * 0.82;
   return wide(size,
     `<defs>
       <linearGradient id="trainBody" x1="0" y1="0" x2="0" y2="1">
@@ -20,33 +23,23 @@ export function trainIcon(s) {
         <stop offset="100%" stop-color="#d9dce2"/>
       </linearGradient>
     </defs>
-    <line x1="0" y1="8" x2="5.5" y2="7.4" stroke="#f0a02a" stroke-width="1.5" stroke-linecap="round" opacity=".9"/>
-    <line x1=".5" y1="11.5" x2="6" y2="11" stroke="#f5b451" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>
-    <line x1="1.5" y1="15" x2="6.5" y2="14.6" stroke="#f8c778" stroke-width="1.1" stroke-linecap="round" opacity=".6"/>
-    <path d="M7 4.5 h20 c7 0 12.5 2.5 15.5 6.2 c.6 .8 .6 1.6 0 2.4 c-.8 1 -2 1.4 -3.5 1.4 H7 c-1.4 0 -2.2 -.8 -2.2 -2 V6.5 c0 -1.2 .8 -2 2.2 -2 z"
+    <line x1="0" y1="7.6" x2="4.5" y2="7.1" stroke="#f0a02a" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>
+    <line x1=".4" y1="11" x2="5" y2="10.6" stroke="#f5b451" stroke-width="1.2" stroke-linecap="round" opacity=".75"/>
+    <line x1="1.2" y1="14.4" x2="5.4" y2="14.1" stroke="#f8c778" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+
+    <rect x="6" y="5" width="15.5" height="10" rx="2.2"
       fill="url(#trainBody)" stroke="#b9bec7" stroke-width=".7" stroke-linejoin="round"/>
-    <rect x="7.5" y="6.6" width="18" height="4.4" rx="1.2" fill="#2c3145"/>
-    <path d="M27.5 6.6 h1.8 c4.2 .6 7.6 2.4 10 4.4 h-11.8 z" fill="#2c3145"/>
-    <ellipse cx="36.5" cy="12.8" rx="2" ry="1.2" fill="#f5f6f8" opacity=".9"/>
-    <rect x="5.5" y="14.6" width="35" height="1.6" rx=".8" fill="#f0a02a" opacity=".9"/>
-    <g>
-      <circle cx="13" cy="18.2" r="3.1" fill="#262b33"/>
-      <circle cx="13" cy="18.2" r="1.7" fill="#6f7681"/>
-      <rect x="11.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33"/>
-      <rect x="11.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(60 13 18.2)"/>
-      <rect x="11.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(120 13 18.2)"/>
-      <circle cx="13" cy="18.2" r=".7" fill="#e9ebee"/>
-      <animateTransform attributeName="transform" type="rotate" from="0 13 18.2" to="360 13 18.2" dur=".45s" repeatCount="indefinite"/>
-    </g>
-    <g>
-      <circle cx="27" cy="18.2" r="3.1" fill="#262b33"/>
-      <circle cx="27" cy="18.2" r="1.7" fill="#6f7681"/>
-      <rect x="25.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33"/>
-      <rect x="25.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(60 27 18.2)"/>
-      <rect x="25.4" y="17.7" width="3.2" height=".9" rx=".45" fill="#262b33" transform="rotate(120 27 18.2)"/>
-      <circle cx="27" cy="18.2" r=".7" fill="#e9ebee"/>
-      <animateTransform attributeName="transform" type="rotate" from="0 27 18.2" to="360 27 18.2" dur=".45s" repeatCount="indefinite"/>
-    </g>`);
+    <rect x="8" y="7" width="11.5" height="4.4" rx="1.1" fill="#2c3145"/>
+    <rect x="6" y="13.5" width="15.5" height="1.5" rx=".75" fill="#f0a02a" opacity=".9"/>
+
+    <rect x="21.8" y="8.5" width="1.4" height="4" fill="#8f96a1"/>
+
+    <path d="M23.5 5 h9.5 c5.8 0 10.4 2.4 13 6 c.5 .7 .5 1.6 0 2.3 c-.8 1.1 -2.1 1.7 -3.7 1.7 H23.5 z"
+      fill="url(#trainBody)" stroke="#b9bec7" stroke-width=".7" stroke-linejoin="round"/>
+    <rect x="25" y="7" width="7.5" height="4.4" rx="1.1" fill="#2c3145"/>
+    <path d="M33.8 7 h1.2 c3.4 .5 6.2 2 8.2 3.6 h-9.4 z" fill="#2c3145"/>
+    <ellipse cx="40.5" cy="12.6" rx="1.6" ry="1" fill="#f5f6f8" opacity=".9"/>
+    <rect x="23.5" y="13.5" width="19" height="1.5" rx=".75" fill="#f0a02a" opacity=".9"/>`);
 }
 
 export function carIcon(s) {
