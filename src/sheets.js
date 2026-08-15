@@ -37,3 +37,14 @@ export async function fetchAllTabs({ fetchFn = fetch } = {}) {
   const results = await Promise.all(keys.map(k => fetchTab(k, { fetchFn })));
   return Object.fromEntries(keys.map((k, i) => [k, results[i]]));
 }
+
+/**
+ * 同時開始抓六個頁籤，但回傳「每個頁籤各自的 Promise」而不是等全部到齊的單一 Promise。
+ * 地圖只需要 itinerary，讓它一到就能開始渲染；其餘區塊各自到齊再補上，
+ * 不必陪跑最慢的那個頁籤（實測六個頁籤合計約 6.5 秒）。
+ */
+export function fetchTabsIndividually({ fetchFn = fetch } = {}) {
+  return Object.fromEntries(
+    Object.keys(TABS).map(k => [k, fetchTab(k, { fetchFn })])
+  );
+}

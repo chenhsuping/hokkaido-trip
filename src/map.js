@@ -59,6 +59,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
   function showAll() {
     stopPlayback();
     clear();
+    const myToken = playToken;
     const bounds = [];
     for (const [i, day] of days.entries()) {
       const color = DAY_COLORS[i % DAY_COLORS.length];
@@ -67,11 +68,23 @@ export function createMap(el, { days, resolve: resolvePlace }) {
         if (!pts) continue;
         const c = MODE_COLORS[leg.mode];
         if (!c) continue;
-        L.polyline(pts, {
+        const line = L.polyline(pts, {
           color, weight: 3.2, opacity: 0.85, lineCap: 'round',
           dashArray: leg.mode === 'drive' ? '8 8' : null,
         }).addTo(layers.route);
         bounds.push(...pts);
+
+        const from = resolvePlace(day.spots[leg.fromIndex].name);
+        const to = resolvePlace(day.spots[leg.toIndex].name);
+        if (from && to) {
+          roadFetcher.fetchRoad(leg.mode, from, to).then(road => {
+            if (myToken !== playToken) return;
+            // JR 沒有道路路徑（fetchRoad 回傳 null），退回與載具相同的平滑曲線，
+            // 兩者才會重合；直接留兩點直線的話圖示會偏離畫出來的線。
+            const path = road || smoothPath([from, to]);
+            line.setLatLngs(path.map(p => L.latLng(p.lat, p.lng)));
+          });
+        }
       }
     }
     if (bounds.length) map.fitBounds(L.latLngBounds(bounds), { padding: [46, 46] });
@@ -81,17 +94,29 @@ export function createMap(el, { days, resolve: resolvePlace }) {
     stopPlayback();
     clear();
     const day = days[index];
+    const myToken = playToken;
     const bounds = [];
     for (const leg of day.legs) {
       const pts = legCoords(day, leg);
       if (!pts) continue;
       const c = MODE_COLORS[leg.mode];
       if (!c) continue;
-      L.polyline(pts, {
+      const line = L.polyline(pts, {
         color: c, weight: 3, opacity: 0.95, lineCap: 'round',
         dashArray: leg.mode === 'drive' ? '7 7' : null,
       }).addTo(layers.route);
       bounds.push(...pts);
+
+      // 先用兩點直線立刻畫出來（不必等網路），道路資料回來後就地升級成實際路線。
+      // 載具走的也是同一份資料，兩者才會完全重合——否則圖示會偏離畫出來的線。
+      const from = resolvePlace(day.spots[leg.fromIndex].name);
+      const to = resolvePlace(day.spots[leg.toIndex].name);
+      if (from && to) {
+        roadFetcher.fetchRoad(leg.mode, from, to).then(road => {
+          if (!road || myToken !== playToken) return;
+          line.setLatLngs(road.map(p => L.latLng(p.lat, p.lng)));
+        });
+      }
     }
     for (const spot of day.spots) {
       const p = resolvePlace(spot.name);

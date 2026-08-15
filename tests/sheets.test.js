@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { COLUMNS, pickColumns, fetchTab, fetchAllTabs } from '../src/sheets.js';
+import { COLUMNS, pickColumns, fetchTab, fetchAllTabs, fetchTabsIndividually } from '../src/sheets.js';
 
 describe('COLUMNS', () => {
   it('交通頁籤的白名單不含訂位欄', () => {
@@ -72,5 +72,43 @@ describe('fetchAllTabs', () => {
     expect(all.budget.ok).toBe(false);
     expect(all.itinerary.ok).toBe(true);
     expect(all.lodging.ok).toBe(true);
+  });
+});
+
+describe('fetchTabsIndividually', () => {
+  it('回傳每個頁籤各自的 Promise，不等全部到齊', async () => {
+    const fetchFn = vi.fn().mockResolvedValue({ ok: true, text: async () => 'a\n1' });
+    const pending = fetchTabsIndividually({ fetchFn });
+    for (const k of ['itinerary', 'dining', 'lodging', 'transport', 'budget', 'todo']) {
+      expect(pending[k]).toBeInstanceOf(Promise);
+    }
+    expect((await pending.itinerary).ok).toBe(true);
+  });
+
+  it('itinerary 可以先解析完成，不被最慢的頁籤拖住', async () => {
+    let releaseSlow;
+    const slow = new Promise(r => { releaseSlow = r; });
+    const fetchFn = vi.fn().mockImplementation(url => {
+      // budget 頁籤永遠不回，直到測試手動放行
+      if (url.includes('gid=1572357344')) return slow;
+      return Promise.resolve({ ok: true, text: async () => 'a\n1' });
+    });
+
+    const pending = fetchTabsIndividually({ fetchFn });
+    // budget 還卡著，itinerary 就已經可用
+    expect((await pending.itinerary).ok).toBe(true);
+
+    releaseSlow({ ok: true, text: async () => 'a\n1' });
+    expect((await pending.budget).ok).toBe(true);
+  });
+
+  it('單一頁籤失敗不影響其他頁籤', async () => {
+    const fetchFn = vi.fn().mockImplementation(url => {
+      if (url.includes('gid=1572357344')) return Promise.reject(new Error('boom'));
+      return Promise.resolve({ ok: true, text: async () => 'a\n1' });
+    });
+    const pending = fetchTabsIndividually({ fetchFn });
+    expect((await pending.budget).ok).toBe(false);
+    expect((await pending.itinerary).ok).toBe(true);
   });
 });

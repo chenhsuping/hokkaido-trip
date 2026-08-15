@@ -120,23 +120,6 @@ section{padding:64px 0}
 @media(max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stats{grid-template-columns:1fr}}
 
-.cities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px}
-.city{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;
-  box-shadow:0 1px 1px rgba(43,39,33,.03),0 20px 34px -32px rgba(43,39,33,.6);
-  transition:transform .25s;display:flex;flex-direction:column}
-.city:hover{transform:translateY(-3px)}
-.city .ph{aspect-ratio:4/3;background:#f4ece0;position:relative;overflow:hidden}
-.city .ph img{width:100%;height:100%;object-fit:cover;display:block}
-.city .ph .idx{position:absolute;top:12px;left:12px;background:rgba(255,254,251,.93);
-  border-radius:99px;padding:4px 11px;font-size:10px;letter-spacing:.14em;font-weight:500}
-.city .bd{padding:17px 19px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
-.city h3{font-size:18px;font-weight:700;letter-spacing:.04em;margin:0}
-.city h3 span{font-size:10.5px;font-weight:500;color:var(--ink-3);letter-spacing:.1em;margin-left:8px}
-.city p{font-size:12px;line-height:1.85;color:var(--ink-2);margin:0}
-.city .spots{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
-.city .spots b{font-size:10px;font-weight:400;color:var(--ink-2);background:#f7f1e4;
-  border-radius:99px;padding:4px 9px;letter-spacing:.02em}
-
 .ramen{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:28px 30px;margin-bottom:26px;
   box-shadow:0 1px 1px rgba(43,39,33,.03),0 26px 46px -34px rgba(43,39,33,.5)}
 .ramen .rh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -257,7 +240,6 @@ section{padding:64px 0}
     <ul id="navlinks">
       <li><a href="#overview">總覽</a></li>
       <li><a href="#days">逐日行程</a></li>
-      <li><a href="#cities">五座城市</a></li>
       <li><a href="#food">吃什麼</a></li>
       <li><a href="#stay">住哪裡</a></li>
       <li><a href="#cost">花多少</a></li>
@@ -297,12 +279,6 @@ section{padding:64px 0}
       <div id="map"></div>
     </div>
     <div id="cards"></div>
-  </section>
-
-  <section id="cities">
-    <div class="shead"><div class="cap">Five cities</div><h2>五座城市</h2>
-      <p>每座城市停留的天數、去了哪些地方。</p></div>
-    <div id="citiesgrid"></div>
   </section>
 
   <section id="food">
