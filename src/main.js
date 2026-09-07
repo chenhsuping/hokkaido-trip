@@ -162,7 +162,7 @@ async function start() {
    * onerror 把載不到的圖片直接移除，露出 .ph 的底色——地名簿可以先寫上
    * 檔名、照片之後再補進 photos/，中間這段期間不會卡著一排破圖圖示。
    */
-  const pcard = ({ kind, tag, photo, city, name, dt, memo, foot, lat, lng }) => `
+  const pcard = ({ kind, tag, photo, city, name, dt, dish, memo, foot, lat, lng }) => `
     <div class="pcard-wrap">
       <a class="pcard ${kind}" href="${mapsUrl({ lat, lng, name, city })}" target="_blank" rel="noopener">
         <div class="ph">${photo
@@ -172,6 +172,7 @@ async function start() {
           ${city ? `<div class="ct">${city}</div>` : ''}
           <h3>${name}</h3>
           ${dt ? `<div class="dt">${dt}</div>` : ''}
+          ${dish ? `<div class="dish">${dish}</div>` : ''}
           ${memo ? `<div class="memo">${memo}</div>` : ''}
           ${foot ? `<div class="ft">${foot}</div>` : ''}
         </div>
@@ -221,7 +222,10 @@ async function start() {
         city: d.city,
         name: d.name,
         dt: md(d.date),
-        memo: d.note,
+        // 兩件不同的事：dish 是這一餐打算點什麼（試算表的備註），
+        // memo 是這家店本身（地名簿）。原本只有前者，卡片就只剩一串菜名。
+        dish: d.note,
+        memo: place?.desc || '',
         foot: flavor || rz ? `${flavor}${rz}` : '',
       });
     }).join('');

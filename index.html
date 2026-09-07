@@ -237,6 +237,13 @@ section{padding:40px 0}
 .pcard .ct{font-size:10px;letter-spacing:.14em;color:var(--ink-3)}
 .pcard h3{font-size:15px;font-weight:700;letter-spacing:.02em;margin:0;line-height:1.4}
 .pcard .dt{font-size:11px;color:var(--ink-2);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+/* 這一餐打算點什麼。和 .memo 分開是因為兩者答的不是同一個問題：
+   這行是這趟的計畫（試算表填的），.memo 是這家店本身（地名簿寫的）。
+   用行首的小圓點和較深的字色和說明拉開層次。 */
+.pcard .dish{position:relative;padding-left:12px;font-size:11px;color:var(--ink-2);
+  letter-spacing:.03em;line-height:1.65}
+.pcard .dish::before{content:"";position:absolute;left:0;top:.6em;width:4px;height:4px;
+  border-radius:50%;background:var(--jr)}
 .pcard .memo{font-size:10.5px;color:var(--ink-3);letter-spacing:.04em;line-height:1.7}
 .pcard .ft{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:10px;
   border-top:1px dashed rgba(43,39,33,.16)}
@@ -399,7 +406,7 @@ section{padding:40px 0}
 
   <section id="food">
     <div class="shead"><div class="cap">What to eat</div><h2>吃什麼</h2>
-      <p>拉麵三天王一路吃齊：旭川蜂屋的焦香醬油、函館山崎洋服店的清澈鹽味、札幌一粒庵的味噌配溫泉蛋。中間換著花樣吃：小樽三角市場的海鮮丼、酥脆炸半雞、函館限定的幸運小丑漢堡、明治創業的五島軒洋食、隆起鐵鍋上的成吉思汗烤羊，也有一晚是超市隨便買。跨年後是初詣屋台與和牛壽喜燒，最後帶著機場現烤的玉米麵包上飛機。</p></div>
+      <p>拉麵三天王一路吃齊：旭川醬油、函館鹽味、札幌味增。中間夾著小樽炸雞定食、幸運小丑漢堡、明治年間創業的老洋食館，一晚超市隨便買，跨年後是初詣屋台與和牛壽喜燒。</p></div>
     <div id="eatsgrid" class="rail"></div>
   </section>
 
