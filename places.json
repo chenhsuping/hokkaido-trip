@@ -260,7 +260,19 @@
     "lng": 141.3092009,
     "lat": 43.0545798,
     "desc": "圓山公園裡的北海道總鎮守，元旦初詣的主場；地下鐵東西線圓山公園站步行約 15 分鐘。",
-    "photo": "photos/hokkaido-shrine.jpg"
+    "photo": "photos/hokkaido-shrine.jpg",
+    "aliases": [
+      "北海道神宮 屋台市集"
+    ]
+  },
+  "北海道大學": {
+    "lng": 141.3373222,
+    "lat": 43.0795634,
+    "desc": "札幌站北邊的百年校園，白楊木道與銀杏並木冬天積雪，可以一路走進去。",
+    "photo": "photos/hokkaido-university.jpg",
+    "aliases": [
+      "北海道大学"
+    ]
   },
   "白色戀人公園": {
     "lng": 141.2716802,
@@ -290,6 +302,21 @@
     "photo": "photos/tanukikoji.jpg",
     "aliases": [
       "狸小路商店街"
+    ]
+  },
+  "美瑛選果": {
+    "lng": 141.692,
+    "lat": 42.775,
+    "desc": "新千歲空港航廈裡的 JA 美瑛直營店，玉米麵包現烤現賣，回程登機前的最後一站。",
+    "photo": "photos/biei-senka.jpg"
+  },
+  "札幌農學校": {
+    "lng": 141.692,
+    "lat": 42.775,
+    "desc": "新千歲空港航廈裡的烘焙店，現烤的酪農起司蛋糕，和美瑛選果同一趟順路。",
+    "photo": "photos/sapporo-nogakko.jpg",
+    "aliases": [
+      "札幌農学校"
     ]
   }
 }
