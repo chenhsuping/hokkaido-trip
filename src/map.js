@@ -4,6 +4,7 @@ import { ICON } from './icons.js';
 import { smoothPath, arcPath } from './curve.js';
 import { computeHeading, computeTrackHeading } from './heading.js';
 import { makeRoadFetcher } from './roads.js';
+import { connectLegs } from './connect.js';
 
 /**
  * 「全程」模式的每日色票。單日模式改用該段 leg 的交通色。
@@ -57,6 +58,15 @@ export function createMap(el, { days, resolve: resolvePlace }) {
     return a && b ? [latLng(a), latLng(b)] : null;
   }
 
+  /**
+   * 當天實際畫得出來的路段。地點待補的列沒有座標，會把一天的路線切成兩截，
+   * 所以先跨過去接起來（見 connect.js），三處視圖都用同一份，
+   * 靜態線條、圖釘與動畫才不會各走各的。
+   */
+  function drawableLegs(day) {
+    return connectLegs(day.legs, i => !!resolvePlace(day.spots[i]?.name));
+  }
+
   function clear() {
     layers.route.clearLayers();
     layers.pins.clearLayers();
@@ -71,7 +81,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
     const bounds = [];
     for (const [i, day] of days.entries()) {
       const color = DAY_COLORS[i % DAY_COLORS.length];
-      for (const leg of day.legs) {
+      for (const leg of drawableLegs(day)) {
         if (leg.opening) continue;      // 開場航段只在播放時出現，見下方 showDay 的說明
         const pts = legCoords(day, leg);
         if (!pts) continue;
@@ -107,7 +117,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
     const bounds = [];
     // 開場的桃園→新千歲航段不畫進靜態視圖：它會把邊界撐到包含台灣，
     // 北海道當天的行程被壓縮成畫面角落的一小塊。那段只在播放時飛一次。
-    for (const leg of day.legs) {
+    for (const leg of drawableLegs(day)) {
       if (leg.opening) continue;
       const pts = legCoords(day, leg);
       if (!pts) continue;
@@ -159,7 +169,7 @@ export function createMap(el, { days, resolve: resolvePlace }) {
     });
 
     return new Promise(done => {
-      const legsWithCoords = day.legs
+      const legsWithCoords = drawableLegs(day)
         .map(leg => {
           const from = resolvePlace(day.spots[leg.fromIndex].name);
           const to = resolvePlace(day.spots[leg.toIndex].name);
